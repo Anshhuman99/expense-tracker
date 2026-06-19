@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
-from database.db import get_db, init_db, seed_db, create_user
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from werkzeug.security import check_password_hash
 import sqlite3
 import re
 
@@ -11,6 +12,17 @@ app.secret_key = "dev-secret-key"
 with app.app_context():
     init_db()
     seed_db()
+
+
+@app.before_request
+def load_logged_in_user():
+    user_id = session.get("user_id")
+    if user_id is None:
+        g.user = None
+    else:
+        conn = get_db()
+        g.user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        conn.close()
 
 
 # ------------------------------------------------------------------ #
@@ -55,8 +67,22 @@ def register():
     return render_template("register.html")
 
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        user = get_user_by_email(email)
+        if not user or not check_password_hash(user["password_hash"], password):
+            flash("Invalid email or password.", "error")
+            return render_template("login.html")
+
+        session["user_id"] = user["id"]
+        session["user_name"] = user["name"]
+        flash("Logged in successfully.", "success")
+        return redirect(url_for("landing"))
+
     return render_template("login.html")
 
 
@@ -76,11 +102,16 @@ def privacy():
 
 @app.route("/logout")
 def logout():
-    return "Logout — coming in Step 3"
+    session.clear()
+    flash("Logged out successfully.", "success")
+    return redirect(url_for("landing"))
 
 
 @app.route("/profile")
 def profile():
+    if not session.get("user_id"):
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
     return "Profile page — coming in Step 4"
 
 
