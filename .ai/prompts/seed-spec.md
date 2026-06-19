@@ -80,7 +80,7 @@ Title: <feature_title>
 
 Then print:
 
-Review the spec at .claude/specs/<step_number>-<feature_slug>.md then enter Plan Mode with Shift+Tab twice to begin implementation.
+Review the spec at .claude/specs/<step_number>-<feature_slug>.md then enter Plan Mode 
 
 Never implement code or print the spec unless requested.
 ```

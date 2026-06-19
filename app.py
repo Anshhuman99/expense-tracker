@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from database.db import get_db, init_db, seed_db, create_user
 import sqlite3
+import re
+
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -22,9 +25,27 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
-        name = request.form["name"]
-        email = request.form["email"]
-        password = request.form["password"]
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+        confirm_password = request.form.get("confirm_password", "")
+
+        if not name:
+            flash("Name is required.", "error")
+            return render_template("register.html")
+
+        if not email or not EMAIL_REGEX.match(email):
+            flash("Invalid email address.", "error")
+            return render_template("register.html")
+
+        if len(password) < 8:
+            flash("Password must be at least 8 characters long.", "error")
+            return render_template("register.html")
+
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return render_template("register.html")
+
         try:
             create_user(name, email, password)
             flash("Account created! Please log in.", "success")
