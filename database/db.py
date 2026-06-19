@@ -75,3 +75,13 @@ def seed_db(path=None):
     )
     conn.commit()
     conn.close()
+
+
+def get_user_by_email(email, path=None):
+    conn = get_db(path)
+    try:
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        return user
+    finally:
+        conn.close()
+
