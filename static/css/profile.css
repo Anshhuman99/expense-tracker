@@ -1,0 +1,212 @@
+/* Dashboard Layout */
+.dashboard-container {
+    max-width: var(--max-width);
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.profile-meta {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.stat-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.03);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-family: var(--font-body);
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* Dashboard Columns */
+.dashboard-columns {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.03);
+}
+
+.card h2 {
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-header h2 {
+    margin-bottom: 0;
+}
+
+/* Expense Table */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.expense-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.expense-table th {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-muted);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+.expense-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-soft);
+    color: var(--ink-soft);
+    font-size: 0.9rem;
+}
+
+.expense-table tr:last-child td {
+    border-bottom: none;
+}
+
+.expense-table td.amount {
+    font-weight: 500;
+    color: var(--ink);
+    text-align: right;
+}
+
+.expense-table th:last-child {
+    text-align: right;
+}
+
+/* Category Badges */
+.category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.category-badge.food { background: #fef3c7; color: #b45309; }
+.category-badge.transport { background: #e0f2fe; color: #0369a1; }
+.category-badge.bills { background: #fee2e2; color: #b91c1c; }
+.category-badge.health { background: #dcfce7; color: #15803d; }
+.category-badge.entertainment { background: #f3e8ff; color: #7e22ce; }
+.category-badge.shopping { background: #fae8ff; color: #a21caf; }
+.category-badge.other { background: #f3f4f6; color: #4b5563; }
+
+/* Progress Bars */
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.category-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.category-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.category-name {
+    font-weight: 500;
+    color: var(--ink-soft);
+}
+
+.category-amt {
+    color: var(--ink-muted);
+}
+
+.progress-bar-track {
+    background: var(--paper-warm);
+    border-radius: 4px;
+    height: 8px;
+    width: 100%;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    border-radius: 4px;
+}
+
+.progress-bar-1 { background: var(--accent); }
+.progress-bar-2 { background: var(--accent-2); }
+.progress-bar-3 { background: #0369a1; }
+.progress-bar-4 { background: #7e22ce; }
+.progress-bar-5 { background: #a21caf; }
+.progress-bar-default { background: var(--ink-muted); }
+
+.empty-state {
+    text-align: center;
+    color: var(--ink-muted);
+    padding: 2rem 0;
+    font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-columns {
+        grid-template-columns: 1fr;
+    }
+}

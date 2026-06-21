@@ -85,3 +85,54 @@ def get_user_by_email(email, path=None):
     finally:
         conn.close()
 
+
+def get_user_expense_stats(user_id, path=None):
+    import datetime
+    conn = get_db(path)
+    try:
+        total_spent = conn.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ?", (user_id,)).fetchone()[0] or 0.0
+        total_count = conn.execute("SELECT COUNT(*) FROM expenses WHERE user_id = ?", (user_id,)).fetchone()[0] or 0
+        current_month = datetime.date.today().strftime("%Y-%m")
+        month_spent = conn.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ? AND date LIKE ?", (user_id, f"{current_month}%")).fetchone()[0] or 0.0
+        return {
+            "total_spent": total_spent,
+            "total_count": total_count,
+            "month_spent": month_spent
+        }
+    finally:
+        conn.close()
+
+
+def get_user_category_breakdown(user_id, path=None):
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            "SELECT category, SUM(amount) as total FROM expenses WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+            (user_id,)
+        ).fetchall()
+        total_spent = sum(row['total'] for row in rows)
+        breakdown = []
+        for row in rows:
+            percentage = (row['total'] / total_spent * 100) if total_spent > 0 else 0
+            breakdown.append({
+                "category": row["category"],
+                "total": row["total"],
+                "percentage": round(percentage, 1)
+            })
+        return breakdown
+    finally:
+        conn.close()
+
+
+def get_user_recent_expenses(user_id, limit=5, path=None):
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+            (user_id, limit)
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
