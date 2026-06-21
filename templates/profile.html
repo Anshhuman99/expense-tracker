@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <h1>Welcome back, {{ g.user.name }}</h1>
+        <p class="profile-meta">Email: {{ g.user.email }} | Member since: {{ g.user.created_at[:10] }}</p>
+    </div>
+
+    <!-- KPI Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Spent</div>
+            <div class="stat-value">₹{{ "{:,.2f}".format(stats.total_spent) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Spent This Month</div>
+            <div class="stat-value">₹{{ "{:,.2f}".format(stats.month_spent) }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Transactions</div>
+            <div class="stat-value">{{ stats.total_count }}</div>
+        </div>
+    </div>
+
+    <!-- Dashboard Columns -->
+    <div class="dashboard-columns">
+        
+        <!-- Recent Expenses (Left Column) -->
+        <div class="dashboard-main card">
+            <div class="card-header">
+                <h2>Recent Expenses</h2>
+                <a href="/expenses/add" class="btn-secondary btn-cta" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;">Add Expense</a>
+            </div>
+            <div class="table-responsive">
+                <table class="expense-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Category</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for expense in recent_expenses %}
+                        <tr>
+                            <td>{{ expense.date }}</td>
+                            <td><span class="category-badge {{ expense.category.lower() }}">{{ expense.category }}</span></td>
+                            <td>{{ expense.description or '—' }}</td>
+                            <td class="amount">₹{{ "{:,.2f}".format(expense.amount) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="empty-state">No expenses logged yet. Start tracking to see them here!</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Category Breakdown (Right Column) -->
+        <div class="dashboard-sidebar card">
+            <h2>Category Breakdown</h2>
+            <div class="category-list">
+                {% for cat in breakdown %}
+                <div class="category-row">
+                    <div class="category-info">
+                        <span class="category-name">{{ cat.category }}</span>
+                        <span class="category-amt">₹{{ "{:,.2f}".format(cat.total) }} ({{ cat.percentage }}%)</span>
+                    </div>
+                    <div class="progress-bar-track">
+                        <div class="progress-bar progress-bar-{{ loop.index if loop.index <= 5 else 'default' }}" style="width: {{ cat.percentage }}%"></div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="empty-state">No category data available yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

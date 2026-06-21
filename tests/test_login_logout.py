@@ -39,7 +39,7 @@ def test_login_success(client):
     
     assert response.status_code == 200
     assert b"Logged in successfully." in response.data
-    assert b"Track every rupee" in response.data  # redirected to landing page
+    assert b"Welcome back" in response.data  # redirected to profile dashboard page
     
     # Verify session variables are set
     with client.session_transaction() as sess:
@@ -107,4 +107,33 @@ def test_profile_loads_when_logged_in(client):
     # Get profile
     response = client.get("/profile")
     assert response.status_code == 200
-    assert b"Profile page" in response.data
+    assert b"Welcome back" in response.data
+
+
+def test_login_redirect_if_logged_in(client):
+    # Log in
+    client.post("/login", data={
+        "email": "demo@spendly.com",
+        "password": "demo123"
+    })
+    
+    # Visit login page again
+    response = client.get("/login", follow_redirects=True)
+    assert response.status_code == 200
+    # Should redirect to profile/dashboard
+    assert b"Welcome back" in response.data
+
+
+def test_register_redirect_if_logged_in(client):
+    # Log in
+    client.post("/login", data={
+        "email": "demo@spendly.com",
+        "password": "demo123"
+    })
+    
+    # Visit register page
+    response = client.get("/register", follow_redirects=True)
+    assert response.status_code == 200
+    # Should redirect to profile/dashboard
+    assert b"Welcome back" in response.data
+
