@@ -46,7 +46,7 @@ Read:
 Reuse existing conventions. Don't duplicate specs or invent project details.
 
 7. Write spec
-Save `.claude/specs/<step_number>-<feature_slug>.md` with:
+Save `.ai/setting/specs/<step_number>-<feature_slug>.md` with:
 
 # Spec: <feature_title>
 

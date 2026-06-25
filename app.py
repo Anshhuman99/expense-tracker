@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, get_user_expense_stats, get_user_category_breakdown, get_user_recent_expenses
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
+import datetime
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
@@ -118,12 +120,49 @@ def profile():
         flash("Please log in to access this page.", "error")
         return redirect(url_for("login"))
     
-    stats = get_user_expense_stats(user_id)
-    breakdown = get_user_category_breakdown(user_id)
-    recent_expenses = get_user_recent_expenses(user_id, limit=5)
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+        
+    # Get live summary stats from database
+    summary = get_summary_stats(user_id)
+    
+    # Calculate current month's spent amount dynamically
+    current_month = datetime.date.today().strftime("%Y-%m")
+    conn = get_db()
+    month_spent_row = conn.execute(
+        "SELECT SUM(amount) FROM expenses WHERE user_id = ? AND date LIKE ?",
+        (user_id, f"{current_month}%")
+    ).fetchone()
+    month_spent = month_spent_row[0] if month_spent_row[0] is not None else 0.0
+    conn.close()
+    
+    stats = {
+        "total_spent": summary["total_spent"],
+        "month_spent": month_spent,
+        "total_count": summary["transaction_count"],
+        "top_category": summary["top_category"]
+    }
+    
+    # Retrieve real category breakdown from database
+    db_breakdown = get_category_breakdown(user_id)
+    breakdown = [
+        {
+            "category": item["name"],
+            "total": item["amount"],
+            "percentage": item["pct"]
+        }
+        for item in db_breakdown
+    ]
+    
+    # Retrieve real recent expenses from database
+    recent_expenses = get_recent_transactions(user_id, limit=10)
     
     return render_template(
         "profile.html",
+        user=user,
         stats=stats,
         breakdown=breakdown,
         recent_expenses=recent_expenses
