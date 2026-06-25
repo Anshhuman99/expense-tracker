@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
 from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
-from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown
+from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown, get_categories, get_filtered_expenses
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
@@ -126,6 +126,24 @@ def profile():
         flash("User session invalid. Please log in again.", "error")
         return redirect(url_for("login"))
         
+    # Get active filters from URL query parameters
+    q = request.args.get("q", "").strip()
+    category = request.args.get("category", "").strip()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
+    
+    active_filters = {
+        "q": q,
+        "category": category,
+        "start_date": start_date,
+        "end_date": end_date
+    }
+    
+    is_filtered = any([q, category, start_date, end_date])
+    
+    # Retrieve user's logged categories dynamically
+    categories = get_categories(user_id)
+    
     # Get live summary stats from database
     summary = get_summary_stats(user_id)
     
@@ -157,16 +175,30 @@ def profile():
         for item in db_breakdown
     ]
     
-    # Retrieve real recent expenses from database
-    recent_expenses = get_recent_transactions(user_id, limit=10)
-    
+    # Retrieve real expenses (filtered up to 100 vs default 10 recent)
+    if is_filtered:
+        recent_expenses = get_filtered_expenses(
+            user_id=user_id,
+            category=category,
+            start_date=start_date,
+            end_date=end_date,
+            search_query=q,
+            limit=100
+        )
+    else:
+        recent_expenses = get_recent_transactions(user_id, limit=10)
+        
     return render_template(
         "profile.html",
         user=user,
         stats=stats,
         breakdown=breakdown,
-        recent_expenses=recent_expenses
+        recent_expenses=recent_expenses,
+        categories=categories,
+        active_filters=active_filters,
+        is_filtered=is_filtered
     )
+
 
 
 @app.route("/expenses/add")

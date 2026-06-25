@@ -210,3 +210,123 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Step 6: Filter Form Styles */
+.filters-card {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: var(--paper-warm);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.filters-form {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1.25fr 1.25fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.filter-group label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    background: var(--paper-card);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+    height: 38px;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--accent);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+    height: 38px;
+}
+
+.btn-filter,
+.btn-clear {
+    padding: 0 1rem;
+    font-size: 0.85rem;
+    line-height: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.btn-filter {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+}
+
+.btn-filter:hover {
+    background: var(--accent);
+}
+
+.btn-clear {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    text-decoration: none;
+}
+
+.btn-clear:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+/* Adjust filters on medium screens (tablet) */
+@media (max-width: 900px) {
+    .filters-form {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .filter-actions {
+        grid-column: span 2;
+        width: 100%;
+    }
+    
+    .btn-filter, .btn-clear {
+        flex: 1;
+    }
+}
+
+/* Adjust filters on small screens (mobile) */
+@media (max-width: 600px) {
+    .filters-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-actions {
+        grid-column: span 1;
+    }
+}
+

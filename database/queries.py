@@ -153,3 +153,58 @@ def get_category_breakdown(user_id, path=None):
             item["pct"] = 0
             
     return breakdown
+
+
+def get_categories(user_id, path=None):
+    """
+    Retrieve all unique categories logged by a specific user, sorted alphabetically.
+    Returns a list of strings.
+    """
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT category FROM expenses WHERE user_id = ? ORDER BY category ASC",
+            (user_id,)
+        ).fetchall()
+        return [row["category"] for row in rows]
+    finally:
+        conn.close()
+
+
+def get_filtered_expenses(user_id, category=None, start_date=None, end_date=None, search_query=None, limit=None, path=None):
+    """
+    Retrieve expenses for a specific user filtered by category, date range, and search text.
+    """
+    conn = get_db(path)
+    try:
+        query = "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ?"
+        params = [user_id]
+        
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+            
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+            
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+            
+        if search_query:
+            query += " AND (description LIKE ? OR category LIKE ?)"
+            search_param = f"%{search_query}%"
+            params.extend([search_param, search_param])
+            
+        query += " ORDER BY date DESC, id DESC"
+        
+        if limit:
+            query += " LIMIT ?"
+            params.append(limit)
+            
+        rows = conn.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+

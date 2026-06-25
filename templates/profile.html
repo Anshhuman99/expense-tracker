@@ -34,12 +34,46 @@
     <!-- Dashboard Columns -->
     <div class="dashboard-columns">
         
-        <!-- Recent Expenses (Left Column) -->
+
         <div class="dashboard-main card">
             <div class="card-header">
-                <h2>Recent Expenses</h2>
+                <h2>{% if is_filtered %}Filtered Expenses{% else %}Recent Expenses{% endif %}</h2>
                 <a href="/expenses/add" class="btn-secondary btn-cta" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;">Add Expense</a>
             </div>
+            
+            <!-- Filter Form -->
+            <div class="filters-card">
+                <form method="GET" action="{{ url_for('profile') }}" class="filters-form">
+                    <div class="filter-group">
+                        <label for="q">Search</label>
+                        <input type="text" id="q" name="q" placeholder="Description or category..." value="{{ active_filters.q or '' }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if active_filters.category == cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="start_date">From</label>
+                        <input type="date" id="start_date" name="start_date" value="{{ active_filters.start_date or '' }}">
+                    </div>
+                    <div class="filter-group">
+                        <label for="end_date">To</label>
+                        <input type="date" id="end_date" name="end_date" value="{{ active_filters.end_date or '' }}">
+                    </div>
+                    <div class="filter-actions">
+                        <button type="submit" class="btn-primary btn-filter">Filter</button>
+                        {% if is_filtered %}
+                        <a href="{{ url_for('profile') }}" class="btn-ghost btn-clear">Clear</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+            
             <div class="table-responsive">
                 <table class="expense-table">
                     <thead>
@@ -60,7 +94,13 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" class="empty-state">No expenses logged yet. Start tracking to see them here!</td>
+                            <td colspan="4" class="empty-state">
+                                {% if is_filtered %}
+                                No matching expenses found.
+                                {% else %}
+                                No expenses logged yet. Start tracking to see them here!
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
