@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, get_user_expense_stats, get_user_category_breakdown, get_user_recent_expenses
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
@@ -118,9 +118,32 @@ def profile():
         flash("Please log in to access this page.", "error")
         return redirect(url_for("login"))
     
-    stats = get_user_expense_stats(user_id)
-    breakdown = get_user_category_breakdown(user_id)
-    recent_expenses = get_user_recent_expenses(user_id, limit=5)
+    # TODO (Subagent 2): Retrieve real summary stats from database using get_user_expense_stats
+    stats = {
+        "total_spent": 391.25,
+        "month_spent": 120.00,
+        "total_count": 8
+    }
+    
+    # TODO (Subagent 3): Retrieve real category breakdown from database using get_user_category_breakdown
+    breakdown = [
+        {"category": "Food", "total": 31.25, "percentage": 8.0},
+        {"category": "Bills", "total": 120.00, "percentage": 30.7},
+        {"category": "Transport", "total": 45.00, "percentage": 11.5},
+        {"category": "Entertainment", "total": 60.00, "percentage": 15.3},
+        {"category": "Shopping", "total": 85.00, "percentage": 21.7},
+        {"category": "Health", "total": 30.00, "percentage": 7.7},
+        {"category": "Other", "total": 20.00, "percentage": 5.1}
+    ]
+    
+    # TODO (Subagent 1): Retrieve real recent expenses from database using get_user_recent_expenses
+    recent_expenses = [
+        {"date": "2026-06-17", "category": "Food", "description": "Dinner", "amount": 18.75},
+        {"date": "2026-06-15", "category": "Other", "description": "Miscellaneous", "amount": 20.00},
+        {"date": "2026-06-12", "category": "Shopping", "description": "Clothes", "amount": 85.00},
+        {"date": "2026-06-10", "category": "Entertainment", "description": "Netflix + cinema", "amount": 60.00},
+        {"date": "2026-06-08", "category": "Health", "description": "Pharmacy", "amount": 30.00}
+    ]
     
     return render_template(
         "profile.html",
