@@ -1,5 +1,5 @@
 ---
-name: seed-spec
+name: create-spec
 description: Create a spec file and feature branch for the next Spendly step.
 argument-hint: Step number and feature name, e.g. 2 registration
 allowed-tools: view_file, write_to_file, replace_file_content, list_dir, grep_search, run_command
