@@ -1,12 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, create_expense
 from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown, get_categories, get_filtered_expenses
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
 import datetime
+import math
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+ALLOWED_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -208,9 +210,80 @@ def analytics():
 
 
 
-@app.route("/expenses/add")
+@app.route("/expenses/add", methods=["GET", "POST"])
 def add_expense():
-    return "Add expense — coming in Step 7"
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        has_error = False
+        amount = None
+
+        if not amount_str:
+            flash("Amount is required.", "error")
+            has_error = True
+        else:
+            try:
+                amount = float(amount_str)
+                if not math.isfinite(amount) or amount <= 0:
+                    flash("Amount must be a positive, finite number.", "error")
+                    has_error = True
+            except ValueError:
+                flash("Amount must be a valid number.", "error")
+                has_error = True
+
+        if not category:
+            flash("Category is required.", "error")
+            has_error = True
+        elif category not in ALLOWED_CATEGORIES:
+            flash("Invalid category selected.", "error")
+            has_error = True
+
+        if not date_str:
+            flash("Date is required.", "error")
+            has_error = True
+        else:
+            try:
+                datetime.datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                flash("Invalid date format. Use YYYY-MM-DD.", "error")
+                has_error = True
+
+        if len(description) > 250:
+            flash("Description cannot exceed 250 characters.", "error")
+            has_error = True
+
+        if has_error:
+            return render_template(
+                "add_expense.html",
+                amount=amount_str,
+                category=category,
+                date=date_str,
+                description=description,
+                categories=ALLOWED_CATEGORIES
+            )
+
+        create_expense(user_id, amount, category, date_str, description)
+        flash("Expense added successfully!", "success")
+        return redirect(url_for("profile"))
+
+    # GET request
+    default_date = datetime.date.today().strftime("%Y-%m-%d")
+    return render_template(
+        "add_expense.html",
+        amount="",
+        category="",
+        date=default_date,
+        description="",
+        categories=ALLOWED_CATEGORIES
+    )
 
 
 @app.route("/expenses/<int:id>/edit")
