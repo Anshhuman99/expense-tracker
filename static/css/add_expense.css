@@ -1,0 +1,50 @@
+/* Page-specific styles for Add Expense form */
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
+
+.form-actions button,
+.form-actions a {
+    flex: 1;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 0.7rem;
+    font-size: 0.95rem;
+}
+
+/* Specific styling to ensure select input looks premium and consistent */
+select.form-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.875rem center;
+    background-size: 1.25em;
+    padding-right: 2.5rem;
+    cursor: pointer;
+}
+
+/* Ensure focus border and outline */
+select.form-input:focus {
+    border-color: var(--accent);
+}
+
+/* Style for invalid select placeholder option */
+select.form-input:invalid {
+    color: var(--ink-faint);
+}
+
+select.form-input option {
+    color: var(--ink);
+    background: var(--paper);
+}
+
+.required-asterisk {
+    color: var(--accent);
+}

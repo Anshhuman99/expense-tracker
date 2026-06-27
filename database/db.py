@@ -48,6 +48,18 @@ def create_user(name, email, password, path=None):
         conn.close()
 
 
+def create_expense(user_id, amount, category, date, description, path=None):
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+            (user_id, amount, category, date, description),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def seed_db(path=None):
     conn = get_db(path)
     if conn.execute("SELECT COUNT(*) FROM users").fetchone()[0] > 0:
