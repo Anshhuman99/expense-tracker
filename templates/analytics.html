@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Spendly{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <!-- Hero Section with Abstract Background -->
+    <section class="analytics-hero">
+        <!-- Background Image and Overlays -->
+        <div class="hero-bg">
+            <img alt="Abstract Background" class="hero-bg-img" src="{{ url_for('static', filename='images/analytics_bg.jpg') }}"/>
+            <div class="hero-bg-gradient-bottom"></div>
+            <div class="hero-bg-gradient-top"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="coming-soon-badge">
+                <span class="material-symbols-outlined fill-icon">rocket_launch</span>
+                <span class="badge-text">Coming Soon</span>
+            </div>
+            <h1>Analytics: Deep Dive into Your <span>Project Spending</span></h1>
+            <p class="hero-description">
+                Prepare to unlock the full potential of your financial data. We are building powerful tools for interactive charts, trend analysis, and automated insights to give you unprecedented clarity.
+            </p>
+            <div class="hero-buttons">
+                <button id="notify-btn" class="btn-notify">
+                    <span class="material-symbols-outlined">notifications_active</span>
+                    Notify Me When Live
+                </button>
+                <a class="btn-back-home" href="{{ url_for('profile') }}">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Teaser Grid (Bento Style) -->
+    <section class="teaser-section">
+        <div class="teaser-grid">
+            <!-- Teaser Card 1 -->
+            <div class="teaser-card">
+                <div class="icon-container dashboards">
+                    <span class="material-symbols-outlined fill-icon" style="font-size: 1.5rem;">monitoring</span>
+                </div>
+                <h3>Interactive Dashboards</h3>
+                <p>
+                    Visualize your cash flow with dynamic charts. Filter by project, date, or category to see exactly where your budget is going in real-time.
+                </p>
+            </div>
+            <!-- Teaser Card 2 -->
+            <div class="teaser-card">
+                <div class="icon-container trends">
+                    <span class="material-symbols-outlined fill-icon" style="font-size: 1.5rem;">insights</span>
+                </div>
+                <h3>Trend Analysis</h3>
+                <p>
+                    Identify spending patterns before they become problems. Our predictive models will help you forecast future expenses based on historical data.
+                </p>
+            </div>
+            <!-- Teaser Card 3 -->
+            <div class="teaser-card">
+                <div class="icon-container insights">
+                    <span class="material-symbols-outlined fill-icon" style="font-size: 1.5rem;">auto_awesome</span>
+                </div>
+                <h3>Automated Insights</h3>
+                <p>
+                    Let Spendly do the heavy lifting. Receive proactive alerts about budget anomalies, subscription increases, or cost-saving opportunities.
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('notify-btn').addEventListener('click', function() {
+        alert('Thank you! We will notify you as soon as the Analytics dashboard is live.');
+    });
+</script>
+{% endblock %}
