@@ -18,7 +18,7 @@
 
 ## Tasks
 
-- [ ] **Task 1** — Save plan to `.claude/plans/01-database-setup.md`
+- [ ] **Task 1** — Save plan to `.ai/plans/01-database-setup.md`
 - [ ] **Task 2** — Implement `get_db()` + test scaffolding (`tests/__init__.py`, `tests/test_db.py`)
 - [ ] **Task 3** — Implement `init_db()` with schema + tests
 - [ ] **Task 4** — Implement `seed_db()` with demo data + tests

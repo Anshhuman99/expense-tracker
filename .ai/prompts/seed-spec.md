@@ -98,7 +98,7 @@ Read:
 - CLAUDE.md
 - app.py
 - database/db.py
-- .claude/specs/*
+- .ai/settings/specs/*
 
 Reuse existing:
 
@@ -123,7 +123,7 @@ Each specification should implement one cohesive feature suitable for a single p
 
 Save:
 
-.ai/setting/specs/<step_number>-<feature_slug>.md
+.ai/settings/specs/<step_number>-<feature_slug>.md
 
 The specification must be implementation-ready.
 
@@ -378,7 +378,7 @@ Branch: <branch_name>
 
 Spec file:
 
-.ai/setting/specs/<step_number>-<feature_slug>.md
+.ai/settings/specs/<step_number>-<feature_slug>.md
 
 Title:
 
@@ -388,7 +388,7 @@ Then print:
 
 Review the specification at
 
-.ai/setting/specs/<step_number>-<feature_slug>.md
+.ai/settings/specs/<step_number>-<feature_slug>.md
 
 Then enter Plan Mode.
 

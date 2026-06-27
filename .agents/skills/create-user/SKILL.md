@@ -1,7 +1,7 @@
 ---
 name: create-user
 description: Create a single dummy user in the database
-allowed-tools: Read, Bash(python3:*)
+allowed-tools: view_file, run_command
 ---
 
 Read database/db.py to understand the users table 

@@ -2,9 +2,9 @@
 name: seed-expenses
 description: Seed realistic dummy expenses for a specific user
 argument-hint: "<user_id> <count> <months>"
-allowed-tools: Read , Bash(python3:*)
+allowed-tools: view_file, run_command
 ---
-read database/db.py to understand the expence table 
+read database/db.py to understand the expense table 
 schema, the db connection pattern , and the database 
 filename.
 
