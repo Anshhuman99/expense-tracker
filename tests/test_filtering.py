@@ -112,27 +112,6 @@ def test_route_filtered_by_category(client):
     assert b'selected>Food</option>' in response.data
 
 
-def test_route_filtered_by_text(client):
-    # Log in
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
-    
-    response = client.get("/profile?q=cinema")
-    assert response.status_code == 200
-    assert b"Filtered Expenses" in response.data
-    assert b"Netflix + cinema" in response.data
-    assert b"Lunch" not in response.data
-    
-    # State retention check
-    assert b'value="cinema"' in response.data
-
-
-def test_route_filtered_no_matches(client):
-    # Log in
-    client.post("/login", data={"email": "demo@spendly.com", "password": "demo123"})
-    
-    response = client.get("/profile?q=nonexistent")
-    assert response.status_code == 200
-    assert b"No matching expenses found." in response.data
 
 
 def test_kpi_stats_unfiltered_during_active_filter(client):

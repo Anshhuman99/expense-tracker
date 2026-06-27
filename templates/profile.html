@@ -44,10 +44,7 @@
             <!-- Filter Form -->
             <div class="filters-card">
                 <form method="GET" action="{{ url_for('profile') }}" class="filters-form">
-                    <div class="filter-group">
-                        <label for="q">Search</label>
-                        <input type="text" id="q" name="q" placeholder="Description or category..." value="{{ active_filters.q or '' }}">
-                    </div>
+
                     <div class="filter-group">
                         <label for="category">Category</label>
                         <select id="category" name="category">

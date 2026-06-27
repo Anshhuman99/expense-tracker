@@ -127,19 +127,17 @@ def profile():
         return redirect(url_for("login"))
         
     # Get active filters from URL query parameters
-    q = request.args.get("q", "").strip()
     category = request.args.get("category", "").strip()
     start_date = request.args.get("start_date", "").strip()
     end_date = request.args.get("end_date", "").strip()
     
     active_filters = {
-        "q": q,
         "category": category,
         "start_date": start_date,
         "end_date": end_date
     }
     
-    is_filtered = any([q, category, start_date, end_date])
+    is_filtered = any([category, start_date, end_date])
     
     # Retrieve user's logged categories dynamically
     categories = get_categories(user_id)
@@ -182,7 +180,6 @@ def profile():
             category=category,
             start_date=start_date,
             end_date=end_date,
-            search_query=q,
             limit=100
         )
     else:
