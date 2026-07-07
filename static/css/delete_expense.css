@@ -1,0 +1,90 @@
+/* Page-specific styles for Delete Expense confirmation */
+
+.expense-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.95rem;
+}
+
+.detail-label {
+    font-weight: 600;
+    color: var(--ink-muted);
+}
+
+.detail-value {
+    color: var(--ink-soft);
+    font-weight: 500;
+}
+
+.detail-value.text-danger {
+    color: var(--danger);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.warning-text {
+    color: var(--danger);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 0.5rem;
+    margin-bottom: 1.75rem;
+    font-weight: 500;
+}
+
+/* Category Badges matching profile dashboard */
+.category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.category-badge.food { background: #fef3c7; color: #b45309; }
+.category-badge.transport { background: #e0f2fe; color: #0369a1; }
+.category-badge.bills { background: #fee2e2; color: #b91c1c; }
+.category-badge.health { background: #dcfce7; color: #15803d; }
+.category-badge.entertainment { background: #f3e8ff; color: #7e22ce; }
+.category-badge.shopping { background: #fae8ff; color: #a21caf; }
+.category-badge.other { background: #f3f4f6; color: #4b5563; }
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.form-actions button,
+.form-actions a {
+    flex: 1;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 0.7rem;
+    font-size: 0.95rem;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: var(--paper);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-body);
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.2s ease;
+}
+
+.btn-danger:hover {
+    filter: brightness(0.9);
+}

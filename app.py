@@ -18,6 +18,7 @@ from database.db import (
     get_user_by_email,
     create_expense,
     update_expense,
+    delete_expense as db_delete_expense,
 )
 from database.queries import (
     get_user_by_id,
@@ -409,9 +410,36 @@ def edit_expense(id):
     )
 
 
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["GET", "POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id)
+    if not expense:
+        abort(404)
+
+    if expense["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        db_delete_expense(id)
+        flash("Expense deleted successfully!", "success")
+        return redirect(url_for("profile"))
+
+    # GET request
+    return render_template(
+        "delete_expense.html",
+        expense=expense,
+    )
 
 
 if __name__ == "__main__":

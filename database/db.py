@@ -184,3 +184,18 @@ def update_expense(expense_id, amount, category, date, description, path=None):
         conn.commit()
     finally:
         conn.close()
+
+
+def delete_expense(expense_id, path=None):
+    """
+    Delete an existing expense record by ID.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "DELETE FROM expenses WHERE id = ?",
+            (expense_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
