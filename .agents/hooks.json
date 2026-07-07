@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|replace_file_content|write_to_file|multi_replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys, json, subprocess, shutil\ntry:\n    data = json.load(sys.stdin)\nexcept:\n    data = {}\nfile = data.get('tool_input', {}).get('file_path', '') or data.get('toolCall', {}).get('args', {}).get('TargetFile', '')\nif file and file.endswith('.py'):\n    cmd = None\n    try:\n        import black\n        cmd = [sys.executable, '-m', 'black', '--quiet', file]\n    except ImportError:\n        if shutil.which('black'):\n            cmd = ['black', '--quiet', file]\n    if cmd:\n        subprocess.run(cmd)\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"import sys, json\ntry:\n    data = json.load(sys.stdin)\nexcept:\n    data = {}\ncmd = data.get('tool_input', {}).get('command', '') or data.get('toolCall', {}).get('args', {}).get('CommandLine', '')\nprotected = ['spendly.db', '.env', 'migrations/']\ndangerous = ['rm ', 'rm -', 'unlink ', 'truncate ', 'remove(', 'remove ']\nblocked = False\ndeny_reason = ''\nfor d in dangerous:\n    if d in cmd:\n        for p in protected:\n            if p in cmd:\n                blocked = True\n                deny_reason = f'BLOCKED: Cannot run destructive command on protected file: {p}'\n                break\n        if blocked:\n            break\nif blocked:\n    print(deny_reason, file=sys.stderr)\n    print(json.dumps({'allow_tool': False, 'deny_reason': deny_reason}))\nelse:\n    print(json.dumps({'allow_tool': True}))\""
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,34 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, g, get_flashed_messages
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email, create_expense
-from database.queries import get_user_by_id, get_summary_stats, get_recent_transactions, get_category_breakdown, get_categories, get_filtered_expenses
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+    g,
+    get_flashed_messages,
+    abort,
+)
+from database.db import (
+    get_db,
+    init_db,
+    seed_db,
+    create_user,
+    get_user_by_email,
+    create_expense,
+    update_expense,
+    delete_expense as db_delete_expense,
+)
+from database.queries import (
+    get_user_by_id,
+    get_summary_stats,
+    get_recent_transactions,
+    get_category_breakdown,
+    get_categories,
+    get_filtered_expenses,
+    get_expense_by_id,
+)
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
@@ -8,7 +36,15 @@ import datetime
 import math
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-ALLOWED_CATEGORIES = ["Food", "Transport", "Bills", "Health", "Entertainment", "Shopping", "Other"]
+ALLOWED_CATEGORIES = [
+    "Food",
+    "Transport",
+    "Bills",
+    "Health",
+    "Entertainment",
+    "Shopping",
+    "Other",
+]
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -32,6 +68,7 @@ def load_logged_in_user():
 # ------------------------------------------------------------------ #
 # Routes                                                              #
 # ------------------------------------------------------------------ #
+
 
 @app.route("/")
 def landing():
@@ -98,6 +135,7 @@ def login():
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
 
+
 @app.route("/terms")
 def terms():
     return render_template("terms.html")
@@ -121,60 +159,56 @@ def profile():
     if not user_id:
         flash("Please log in to access this page.", "error")
         return redirect(url_for("login"))
-    
+
     user = get_user_by_id(user_id)
     if not user:
         session.clear()
         flash("User session invalid. Please log in again.", "error")
         return redirect(url_for("login"))
-        
+
     # Get active filters from URL query parameters
     category = request.args.get("category", "").strip()
     start_date = request.args.get("start_date", "").strip()
     end_date = request.args.get("end_date", "").strip()
-    
+
     active_filters = {
         "category": category,
         "start_date": start_date,
-        "end_date": end_date
+        "end_date": end_date,
     }
-    
+
     is_filtered = any([category, start_date, end_date])
-    
+
     # Retrieve user's logged categories dynamically
     categories = get_categories(user_id)
-    
+
     # Get live summary stats from database
     summary = get_summary_stats(user_id)
-    
+
     # Calculate current month's spent amount dynamically
     current_month = datetime.date.today().strftime("%Y-%m")
     conn = get_db()
     month_spent_row = conn.execute(
         "SELECT SUM(amount) FROM expenses WHERE user_id = ? AND date LIKE ?",
-        (user_id, f"{current_month}%")
+        (user_id, f"{current_month}%"),
     ).fetchone()
     month_spent = month_spent_row[0] if month_spent_row[0] is not None else 0.0
     conn.close()
-    
+
     stats = {
         "total_spent": summary["total_spent"],
         "month_spent": month_spent,
         "total_count": summary["transaction_count"],
-        "top_category": summary["top_category"]
+        "top_category": summary["top_category"],
     }
-    
+
     # Retrieve real category breakdown from database
     db_breakdown = get_category_breakdown(user_id)
     breakdown = [
-        {
-            "category": item["name"],
-            "total": item["amount"],
-            "percentage": item["pct"]
-        }
+        {"category": item["name"], "total": item["amount"], "percentage": item["pct"]}
         for item in db_breakdown
     ]
-    
+
     # Retrieve real expenses (filtered up to 100 vs default 10 recent)
     if is_filtered:
         recent_expenses = get_filtered_expenses(
@@ -182,11 +216,11 @@ def profile():
             category=category,
             start_date=start_date,
             end_date=end_date,
-            limit=100
+            limit=100,
         )
     else:
         recent_expenses = get_recent_transactions(user_id, limit=10)
-        
+
     return render_template(
         "profile.html",
         user=user,
@@ -195,9 +229,8 @@ def profile():
         recent_expenses=recent_expenses,
         categories=categories,
         active_filters=active_filters,
-        is_filtered=is_filtered
+        is_filtered=is_filtered,
     )
-
 
 
 @app.route("/analytics")
@@ -207,7 +240,6 @@ def analytics():
         flash("Please log in to access this page.", "error")
         return redirect(url_for("login"))
     return render_template("analytics.html")
-
 
 
 @app.route("/expenses/add", methods=["GET", "POST"])
@@ -233,7 +265,7 @@ def add_expense():
             try:
                 amount = float(amount_str)
                 if not math.isfinite(amount) or amount <= 0:
-                    flash("Amount must be a positive, finite number.", "error")
+                    flash("Amount must be a positive number.", "error")
                     has_error = True
             except ValueError:
                 flash("Amount must be a valid number.", "error")
@@ -267,7 +299,7 @@ def add_expense():
                 category=category,
                 date=date_str,
                 description=description,
-                categories=ALLOWED_CATEGORIES
+                categories=ALLOWED_CATEGORIES,
             )
 
         create_expense(user_id, amount, category, date_str, description)
@@ -282,18 +314,132 @@ def add_expense():
         category="",
         date=default_date,
         description="",
-        categories=ALLOWED_CATEGORIES
+        categories=ALLOWED_CATEGORIES,
     )
 
 
-@app.route("/expenses/<int:id>/edit")
+@app.route("/expenses/<int:id>/edit", methods=["GET", "POST"])
 def edit_expense(id):
-    return "Edit expense — coming in Step 8"
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    # Fetch the expense
+    expense = get_expense_by_id(id)
+    if not expense:
+        abort(404)
+
+    # Ownership check
+    if expense["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        date_str = request.form.get("date", "").strip()
+        description = request.form.get("description", "").strip()
+
+        has_error = False
+        amount = None
+
+        if not amount_str:
+            flash("Amount is required.", "error")
+            has_error = True
+        else:
+            try:
+                amount = float(amount_str)
+                if not math.isfinite(amount) or amount <= 0:
+                    flash("Amount must be a positive number.", "error")
+                    has_error = True
+            except ValueError:
+                flash("Amount must be a valid number.", "error")
+                has_error = True
+
+        if not category:
+            flash("Category is required.", "error")
+            has_error = True
+        elif category not in ALLOWED_CATEGORIES:
+            flash("Invalid category selected.", "error")
+            has_error = True
+
+        if not date_str:
+            flash("Date is required.", "error")
+            has_error = True
+        else:
+            try:
+                datetime.datetime.strptime(date_str, "%Y-%m-%d")
+            except ValueError:
+                flash("Invalid date format. Use YYYY-MM-DD.", "error")
+                has_error = True
+
+        if len(description) > 250:
+            flash("Description cannot exceed 250 characters.", "error")
+            has_error = True
+
+        if has_error:
+            return render_template(
+                "edit_expense.html",
+                expense=expense,
+                amount=amount_str,
+                category=category,
+                date=date_str,
+                description=description,
+                categories=ALLOWED_CATEGORIES,
+            )
+
+        update_expense(id, amount, category, date_str, description)
+        flash("Expense updated successfully!", "success")
+        return redirect(url_for("profile"))
+
+    # GET request: Load existing values
+    return render_template(
+        "edit_expense.html",
+        expense=expense,
+        amount=expense["amount"],
+        category=expense["category"],
+        date=expense["date"],
+        description=expense["description"],
+        categories=ALLOWED_CATEGORIES,
+    )
 
 
-@app.route("/expenses/<int:id>/delete")
+@app.route("/expenses/<int:id>/delete", methods=["GET", "POST"])
 def delete_expense(id):
-    return "Delete expense — coming in Step 9"
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(id)
+    if not expense:
+        abort(404)
+
+    if expense["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        db_delete_expense(id)
+        flash("Expense deleted successfully!", "success")
+        return redirect(url_for("profile"))
+
+    # GET request
+    return render_template(
+        "delete_expense.html",
+        expense=expense,
+    )
 
 
 if __name__ == "__main__":

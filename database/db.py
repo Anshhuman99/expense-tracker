@@ -72,14 +72,14 @@ def seed_db(path=None):
     )
     user_id = cur.lastrowid
     expenses = [
-        (user_id, 12.50,  "Food",          "2026-06-01", "Lunch"),
-        (user_id, 45.00,  "Transport",     "2026-06-03", "Uber"),
-        (user_id, 120.00, "Bills",         "2026-06-05", "Electricity"),
-        (user_id, 30.00,  "Health",        "2026-06-08", "Pharmacy"),
-        (user_id, 60.00,  "Entertainment", "2026-06-10", "Netflix + cinema"),
-        (user_id, 85.00,  "Shopping",      "2026-06-12", "Clothes"),
-        (user_id, 20.00,  "Other",         "2026-06-15", "Miscellaneous"),
-        (user_id, 18.75,  "Food",          "2026-06-17", "Dinner"),
+        (user_id, 12.50, "Food", "2026-06-01", "Lunch"),
+        (user_id, 45.00, "Transport", "2026-06-03", "Uber"),
+        (user_id, 120.00, "Bills", "2026-06-05", "Electricity"),
+        (user_id, 30.00, "Health", "2026-06-08", "Pharmacy"),
+        (user_id, 60.00, "Entertainment", "2026-06-10", "Netflix + cinema"),
+        (user_id, 85.00, "Shopping", "2026-06-12", "Clothes"),
+        (user_id, 20.00, "Other", "2026-06-15", "Miscellaneous"),
+        (user_id, 18.75, "Food", "2026-06-17", "Dinner"),
     ]
     cur.executemany(
         "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
@@ -100,16 +100,33 @@ def get_user_by_email(email, path=None):
 
 def get_user_expense_stats(user_id, path=None):
     import datetime
+
     conn = get_db(path)
     try:
-        total_spent = conn.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ?", (user_id,)).fetchone()[0] or 0.0
-        total_count = conn.execute("SELECT COUNT(*) FROM expenses WHERE user_id = ?", (user_id,)).fetchone()[0] or 0
+        total_spent = (
+            conn.execute(
+                "SELECT SUM(amount) FROM expenses WHERE user_id = ?", (user_id,)
+            ).fetchone()[0]
+            or 0.0
+        )
+        total_count = (
+            conn.execute(
+                "SELECT COUNT(*) FROM expenses WHERE user_id = ?", (user_id,)
+            ).fetchone()[0]
+            or 0
+        )
         current_month = datetime.date.today().strftime("%Y-%m")
-        month_spent = conn.execute("SELECT SUM(amount) FROM expenses WHERE user_id = ? AND date LIKE ?", (user_id, f"{current_month}%")).fetchone()[0] or 0.0
+        month_spent = (
+            conn.execute(
+                "SELECT SUM(amount) FROM expenses WHERE user_id = ? AND date LIKE ?",
+                (user_id, f"{current_month}%"),
+            ).fetchone()[0]
+            or 0.0
+        )
         return {
             "total_spent": total_spent,
             "total_count": total_count,
-            "month_spent": month_spent
+            "month_spent": month_spent,
         }
     finally:
         conn.close()
@@ -120,17 +137,19 @@ def get_user_category_breakdown(user_id, path=None):
     try:
         rows = conn.execute(
             "SELECT category, SUM(amount) as total FROM expenses WHERE user_id = ? GROUP BY category ORDER BY total DESC",
-            (user_id,)
+            (user_id,),
         ).fetchall()
-        total_spent = sum(row['total'] for row in rows)
+        total_spent = sum(row["total"] for row in rows)
         breakdown = []
         for row in rows:
-            percentage = (row['total'] / total_spent * 100) if total_spent > 0 else 0
-            breakdown.append({
-                "category": row["category"],
-                "total": row["total"],
-                "percentage": round(percentage, 1)
-            })
+            percentage = (row["total"] / total_spent * 100) if total_spent > 0 else 0
+            breakdown.append(
+                {
+                    "category": row["category"],
+                    "total": row["total"],
+                    "percentage": round(percentage, 1),
+                }
+            )
         return breakdown
     finally:
         conn.close()
@@ -141,10 +160,42 @@ def get_user_recent_expenses(user_id, limit=5, path=None):
     try:
         rows = conn.execute(
             "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
-            (user_id, limit)
+            (user_id, limit),
         ).fetchall()
         return [dict(row) for row in rows]
     finally:
         conn.close()
 
 
+def update_expense(expense_id, amount, category, date, description, path=None):
+    """
+    Update an existing expense record.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            """
+            UPDATE expenses 
+            SET amount = ?, category = ?, date = ?, description = ? 
+            WHERE id = ?
+            """,
+            (amount, category, date, description, expense_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_expense(expense_id, path=None):
+    """
+    Delete an existing expense record by ID.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "DELETE FROM expenses WHERE id = ?",
+            (expense_id,),
+        )
+        conn.commit()
+    finally:
+        conn.close()
