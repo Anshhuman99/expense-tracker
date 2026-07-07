@@ -319,6 +319,27 @@
     }
 }
 
+/* Edit action button styles */
+.btn-edit {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+    background: var(--accent);
+    color: var(--paper) !important;
+    border-color: var(--accent);
+}
+
+
 /* Adjust filters on small screens (mobile) */
 @media (max-width: 600px) {
     .filters-form {
