@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">🔒</div>
+        <div class="error-code danger">403</div>
+        <h1 class="error-title">Access Denied</h1>
+        <p class="error-message">
+            You do not have permission to view or manage this resource. Please make sure you are logged into the correct account.
+        </p>
+        <div class="error-actions">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="error-btn">Go to Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="error-btn">Sign In</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

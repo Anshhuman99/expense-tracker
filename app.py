@@ -442,6 +442,33 @@ def delete_expense(id):
     )
 
 
+# ------------------------------------------------------------------ #
+# Error Handlers & Testing Routes                                    #
+# ------------------------------------------------------------------ #
+
+
+@app.errorhandler(403)
+def forbidden_error(error):
+    return render_template("errors/403.html"), 403
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template("errors/404.html"), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    return render_template("errors/500.html"), 500
+
+
+@app.route("/trigger-500")
+def trigger_500():
+    if not (app.config.get("TESTING") or app.debug):
+        abort(404)
+    abort(500)
+
+
 if __name__ == "__main__":
     import os
 

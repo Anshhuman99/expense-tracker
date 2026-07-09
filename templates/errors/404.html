@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/errors.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">🧭</div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">
+            We can't seem to find the page you're looking for. It might have been moved or deleted.
+        </p>
+        <div class="error-actions">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}" class="error-btn">Go to Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('landing') }}" class="error-btn">Go to Home</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
