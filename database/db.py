@@ -2,7 +2,10 @@ import sqlite3
 import os
 from werkzeug.security import generate_password_hash
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "spendly.db")
+DB_PATH = os.environ.get(
+    "DATABASE_PATH",
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "spendly.db"),
+)
 
 
 def get_db(path=None):
