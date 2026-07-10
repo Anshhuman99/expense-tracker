@@ -18,6 +18,45 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     });
+
+    // Mobile navigation toggle handler
+    const navToggle = document.getElementById("nav-toggle");
+    const navLinksMenu = document.getElementById("nav-links-menu");
+
+    if (navToggle && navLinksMenu) {
+        navToggle.addEventListener("click", () => {
+            const isExpanded = navToggle.getAttribute("aria-expanded") === "true";
+            navToggle.setAttribute("aria-expanded", !isExpanded);
+            navLinksMenu.classList.toggle("open");
+            const icon = navToggle.querySelector(".material-symbols-outlined");
+            if (icon) {
+                icon.textContent = isExpanded ? "menu" : "close";
+            }
+        });
+
+        // Close menu when clicking outside of navbar
+        document.addEventListener("click", (event) => {
+            if (!navLinksMenu.classList.contains("open")) return;
+            const isClickInside = navToggle.contains(event.target) || navLinksMenu.contains(event.target);
+            if (!isClickInside) {
+                navToggle.setAttribute("aria-expanded", "false");
+                navLinksMenu.classList.remove("open");
+                const icon = navToggle.querySelector(".material-symbols-outlined");
+                if (icon) icon.textContent = "menu";
+            }
+        });
+
+        // Close menu on Escape key press
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && navLinksMenu.classList.contains("open")) {
+                navToggle.setAttribute("aria-expanded", "false");
+                navLinksMenu.classList.remove("open");
+                const icon = navToggle.querySelector(".material-symbols-outlined");
+                if (icon) icon.textContent = "menu";
+                navToggle.focus();
+            }
+        });
+    }
 });
 
 /**

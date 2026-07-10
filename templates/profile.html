@@ -103,17 +103,17 @@
                             <th>Category</th>
                             <th>Description</th>
                             <th>Amount</th>
-                            <th style="text-align: center;">Actions</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for expense in recent_expenses %}
                         <tr>
-                            <td>{{ expense.date }}</td>
-                            <td><span class="category-badge {{ expense.category.lower() }}">{{ expense.category }}</span></td>
-                            <td>{{ expense.description or '—' }}</td>
-                            <td class="amount">₹{{ "{:,.2f}".format(expense.amount) }}</td>
-                            <td style="text-align: center;">
+                            <td data-label="Date">{{ expense.date }}</td>
+                            <td data-label="Category"><span class="category-badge {{ expense.category.lower() }}">{{ expense.category }}</span></td>
+                            <td data-label="Description">{{ expense.description or '—' }}</td>
+                            <td data-label="Amount" class="amount">₹{{ "{:,.2f}".format(expense.amount) }}</td>
+                            <td data-label="Actions">
                                 <a href="{{ url_for('edit_expense', id=expense.id) }}" class="btn-edit">Edit</a>
                                 <a href="{{ url_for('delete_expense', id=expense.id) }}" class="btn-delete">Delete</a>
                             </td>
