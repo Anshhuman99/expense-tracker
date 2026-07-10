@@ -1,0 +1,120 @@
+/* Empty State Containers */
+.empty-state-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3.5rem 2rem;
+    background: var(--paper-card);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+    margin: 1rem 0;
+}
+
+.empty-state-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background: var(--paper-warm);
+    border-radius: 50%;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    transition: transform 0.2s ease;
+}
+
+.empty-state-card:hover .empty-state-icon {
+    transform: scale(1.05);
+}
+
+.empty-state-icon span {
+    font-size: 2rem;
+}
+
+.empty-state-card h3 {
+    font-family: var(--font-body);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-text {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    max-width: 440px;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Sidebar Placeholder */
+.empty-state-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    border: 1px dashed var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--paper-warm);
+}
+
+.empty-state-sidebar .empty-state-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 0.75rem;
+    background: var(--paper-card);
+    color: var(--ink-muted);
+}
+
+.empty-state-sidebar .empty-state-icon span {
+    font-size: 1.5rem;
+}
+
+.empty-state-sidebar h4 {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+}
+
+/* Large CTA Button */
+.btn-cta-large {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.75rem;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn-cta-large:hover {
+    filter: brightness(0.9);
+}
+
+.btn-cta-large:active {
+    transform: scale(0.98);
+}
+
+/* Extracted from templates/profile.html */
+.card-header .btn-cta {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+}
+
+.empty-state-card .btn-clear {
+    line-height: normal;
+    padding: 0.6rem 1.2rem;
+    text-decoration: none;
+}

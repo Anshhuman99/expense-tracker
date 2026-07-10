@@ -123,6 +123,7 @@ def login():
             flash("Invalid email or password.", "error")
             return render_template("login.html")
 
+        session.clear()
         session["user_id"] = user["id"]
         session["user_name"] = user["name"]
         flash("Logged in successfully.", "success")
