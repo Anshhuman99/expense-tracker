@@ -560,7 +560,7 @@ feature/monthly-budget
 ## Spec Files
 
 ```
-.ai/settings/specs/14-monthly-budget.md
+ai/settings/specs/14-monthly-budget.md
 ```
 
 ## Migration Files

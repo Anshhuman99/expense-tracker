@@ -26,7 +26,7 @@ git diff
 git log main..HEAD --oneline
 ```
 
-Read `.ai/settings/specs/` to find the spec for the current feature.
+Read `ai/settings/specs/` to find the spec for the current feature.
 
 Generate a Conventional Commit message:
 

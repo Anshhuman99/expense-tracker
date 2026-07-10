@@ -42,11 +42,11 @@ Read:
 - CLAUDE.md
 - app.py
 - database/db.py
-- .ai/settings/specs/*
+- ai/settings/specs/*
 Reuse existing conventions. Don't duplicate specs or invent project details.
 
 7. Write spec
-Save `.ai/settings/specs/<step_number>-<feature_slug>.md` with:
+Save `ai/settings/specs/<step_number>-<feature_slug>.md` with:
 
 # Spec: <feature_title>
 
@@ -75,11 +75,11 @@ Definition of done must be objective and testable.
 Print only:
 
 Branch: <branch_name>
-Spec file: .ai/settings/specs/<step_number>-<feature_slug>.md
+Spec file: ai/settings/specs/<step_number>-<feature_slug>.md
 Title: <feature_title>
 
 Then print:
 
-Review the spec at .ai/settings/specs/<step_number>-<feature_slug>.md then enter Plan Mode 
+Review the spec at ai/settings/specs/<step_number>-<feature_slug>.md then enter Plan Mode 
 
 Never implement code or print the spec unless requested.

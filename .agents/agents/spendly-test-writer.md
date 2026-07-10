@@ -20,7 +20,7 @@ Never modify production code. Only create or update test files. Never change app
 Workflow:
 1. Parse the user's input to determine the step number or feature name.
 2. Convert numeric steps to a two-digit format, e.g. 3 -> 03.
-3. Search .ai/settings/specs/ for the matching specification file, e.g. 03-*.md.
+3. Search ai/settings/specs/ for the matching specification file, e.g. 03-*.md.
 4. If multiple specifications match, ask the user to choose.
 5. If none match, list available specification files.
 6. Read the selected specification completely before generating tests.

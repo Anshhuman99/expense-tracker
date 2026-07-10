@@ -10,8 +10,8 @@ Run the full testing pipeline for the feature specified in $ARGUMENTS.
 If no argument is provided, stop immediately and say:
 "Please provide a spec name. Usage: /test-feature <spec-name> e.g. /test-feature 05-backend-connection"
 
-If `.ai/settings/specs/$ARGUMENTS.md` does not exist, stop immediately and say:
-"Spec file not found at .ai/settings/specs/$ARGUMENTS.md. Please check the spec name and try again."
+If `ai/settings/specs/$ARGUMENTS.md` does not exist, stop immediately and say:
+"Spec file not found at ai/settings/specs/$ARGUMENTS.md. Please check the spec name and try again."
 
 ---
 
@@ -20,7 +20,7 @@ If `.ai/settings/specs/$ARGUMENTS.md` does not exist, stop immediately and say:
 Invoke the **spendly-test-writer** subagent with the following context:
 
 - Spec file to base tests on: 
-  `.ai/settings/specs/$ARGUMENTS.md`
+  `ai/settings/specs/$ARGUMENTS.md`
 - Source files to read for structure:
   - `app.py`
   - `database/` directory
@@ -39,7 +39,7 @@ Once spendly-test-writer has finished, invoke the **spendly-test-runner** subage
 - Test file to execute:
   `tests/test_$ARGUMENTS.py`
 - Spec file for context:
-  `.ai/settings/specs/$ARGUMENTS.md`
+  `ai/settings/specs/$ARGUMENTS.md`
 - Source files to analyze against when diagnosing failures:
   - `app.py`
   - `database/` directory
