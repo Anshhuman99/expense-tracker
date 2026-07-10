@@ -15,7 +15,10 @@
         <div class="auth-card">
             {% with messages = get_flashed_messages(with_categories=true) %}
               {% for category, message in messages %}
-              <div class="auth-{{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
+              <div class="auth-alert auth-alert-{{ 'error' if category == 'error' else 'success' }}">
+                  <span class="material-symbols-outlined auth-alert-icon">{{ 'error' if category == 'error' else 'check_circle' }}</span>
+                  <span class="auth-alert-message">{{ message }}</span>
+              </div>
               {% endfor %}
             {% endwith %}
 

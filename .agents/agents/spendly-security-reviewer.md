@@ -3,10 +3,10 @@ name: spendly-security-reviewer
 description: Reviews recently implemented Spendly features for common web application security issues. Use after a feature implementation or during the code-review workflow. Focus only on the changed code and teach secure coding through constructive, beginner-friendly feedback rather than blocking progress.
 
 tools:
-  - Read
-  - Grep
-  - Glob
-  - Bash(git diff)
+  - view_file
+  - list_dir
+  - grep_search
+  - run_command
 
 ---
 

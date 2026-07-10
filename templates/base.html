@@ -7,7 +7,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flash_messages.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -34,13 +36,21 @@
 
     <main class="main-content">
         {% if request.endpoint not in ['login', 'register'] %}
-            {% with messages = get_flashed_messages(with_categories=true) %}
-              {% for category, message in messages %}
-                <div class="flash-container">
-                    <div class="flash-message {{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
-                </div>
-              {% endfor %}
-            {% endwith %}
+            <div class="toast-container" id="toast-container">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% for category, message in messages %}
+                    <div class="toast toast-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'warning' }}" role="alert">
+                        <div class="toast-icon">
+                            <span class="material-symbols-outlined">{% if category == 'success' %}check_circle{% elif category == 'error' %}error{% else %}warning{% endif %}</span>
+                        </div>
+                        <div class="toast-message">{{ message }}</div>
+                        <button class="toast-close-btn" aria-label="Close">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                  {% endfor %}
+                {% endwith %}
+            </div>
         {% endif %}
         {% block content %}{% endblock %}
     </main>
