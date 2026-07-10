@@ -3,7 +3,9 @@
 {% block title %}Dashboard — Spendly{% endblock %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/empty_states.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -38,9 +40,21 @@
         <div class="dashboard-main card">
             <div class="card-header">
                 <h2>{% if is_filtered %}Filtered Expenses{% else %}Recent Expenses{% endif %}</h2>
-                <a href="/expenses/add" class="btn-secondary btn-cta" style="padding: 0.4rem 0.9rem; font-size: 0.8rem;">Add Expense</a>
+                {% if stats.total_count > 0 %}
+                <a href="{{ url_for('add_expense') }}" class="btn-secondary btn-cta">Add Expense</a>
+                {% endif %}
             </div>
             
+            {% if stats.total_count == 0 %}
+            <div class="empty-state-card">
+                <div class="empty-state-icon">
+                    <span class="material-symbols-outlined">payments</span>
+                </div>
+                <h3>No Expenses Logged Yet</h3>
+                <p class="empty-state-text">No expenses logged yet. Start tracking to see them here!</p>
+                <a href="{{ url_for('add_expense') }}" class="btn-cta-large">Add Your First Expense</a>
+            </div>
+            {% else %}
             <!-- Filter Form -->
             <div class="filters-card">
                 <form method="GET" action="{{ url_for('profile') }}" class="filters-form">
@@ -71,6 +85,16 @@
                 </form>
             </div>
             
+            {% if recent_expenses|length == 0 %}
+            <div class="empty-state-card">
+                <div class="empty-state-icon">
+                    <span class="material-symbols-outlined">filter_alt_off</span>
+                </div>
+                <h3>No Matches Found</h3>
+                <p class="empty-state-text">No matching expenses found. Try adjusting or clearing your filters.</p>
+                <a href="{{ url_for('profile') }}" class="btn-clear">Clear Active Filters</a>
+            </div>
+            {% else %}
             <div class="table-responsive">
                 <table class="expense-table">
                     <thead>
@@ -94,20 +118,12 @@
                                 <a href="{{ url_for('delete_expense', id=expense.id) }}" class="btn-delete">Delete</a>
                             </td>
                         </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="5" class="empty-state">
-                                {% if is_filtered %}
-                                No matching expenses found.
-                                {% else %}
-                                No expenses logged yet. Start tracking to see them here!
-                                {% endif %}
-                            </td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            {% endif %}
+            {% endif %}
         </div>
 
         <!-- Category Breakdown (Right Column) -->
@@ -125,7 +141,13 @@
                     </div>
                 </div>
                 {% else %}
-                <p class="empty-state">No category data available yet.</p>
+                <div class="empty-state-sidebar">
+                    <div class="empty-state-icon">
+                        <span class="material-symbols-outlined">pie_chart</span>
+                    </div>
+                    <h4>No Category Data</h4>
+                    <p class="empty-state-text">No category data available yet.</p>
+                </div>
                 {% endfor %}
             </div>
         </div>
