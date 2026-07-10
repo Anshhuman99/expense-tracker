@@ -20,7 +20,10 @@
                 <span class="brand-icon">◈</span>
                 <span class="brand-name">Spendly</span>
             </a>
-            <div class="nav-links">
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links-menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <div class="nav-links" id="nav-links-menu">
                 {% if session.get('user_id') %}
                     <span class="nav-user">Hello, {{ session.get('user_name') }}</span>
                     <a href="{{ url_for('profile') }}" class="{% if request.endpoint == 'profile' %}active{% endif %}">Profile</a>

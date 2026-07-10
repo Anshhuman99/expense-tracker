@@ -125,8 +125,9 @@
     text-align: right;
 }
 
-.expense-table th:last-child {
-    text-align: right;
+.expense-table th:last-child,
+.expense-table td:last-child {
+    text-align: center;
 }
 
 /* Category Badges */
@@ -369,6 +370,83 @@
     
     .filter-actions {
         grid-column: span 1;
+    }
+
+    /* Transform table into stacked block cards */
+    .expense-table, 
+    .expense-table thead, 
+    .expense-table tbody, 
+    .expense-table th, 
+    .expense-table td, 
+    .expense-table tr {
+        display: block;
+    }
+    
+    .expense-table thead {
+        display: none;
+    }
+    
+    .expense-table tr {
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--paper-card);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+    }
+    
+    .expense-table td {
+        border: none;
+        border-bottom: 1px solid var(--border-soft);
+        padding: 0.75rem 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: right;
+    }
+    
+    .expense-table td:last-child {
+        border-bottom: none;
+        padding-top: 1rem;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    /* Inject label content */
+    .expense-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--ink-muted);
+        text-align: left;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .expense-table td.amount {
+        font-size: 1.1rem;
+        color: var(--ink);
+    }
+    
+    .expense-table td.amount::before {
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    /* Enlarge action button touch targets on mobile */
+    .btn-edit, .btn-delete {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+    
+    .btn-delete {
+        margin-left: 0.5rem;
     }
 }
 
