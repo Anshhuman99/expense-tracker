@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Settings — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+
+    <div class="settings-header">
+        <span class="material-symbols-outlined settings-header-icon">manage_accounts</span>
+        <div>
+            <h1 class="settings-title">Account Settings</h1>
+            <p class="settings-subtitle">Manage your profile information and password</p>
+        </div>
+    </div>
+
+    <!-- ---- Update Profile Card ---- -->
+    <section class="settings-card" aria-labelledby="profile-section-title">
+        <div class="settings-card-header">
+            <span class="material-symbols-outlined card-header-icon">person</span>
+            <h2 class="settings-card-title" id="profile-section-title">Update Profile</h2>
+        </div>
+        <div class="settings-card-body">
+            <form
+                id="form-update-profile"
+                method="POST"
+                action="{{ url_for('settings_profile') }}"
+                novalidate
+            >
+                <div class="form-group">
+                    <label for="name" class="form-label">Display Name</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        class="form-input"
+                        value="{{ user.name }}"
+                        required
+                        autocomplete="name"
+                        aria-describedby="name-hint"
+                    >
+                    <span id="name-hint" class="form-hint">Your name appears in the navbar greeting.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-input"
+                        value="{{ user.email }}"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btn-save-profile" class="btn btn-primary">
+                        <span class="material-symbols-outlined btn-icon">save</span>
+                        Save Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ---- Change Password Card ---- -->
+    <section class="settings-card" aria-labelledby="password-section-title">
+        <div class="settings-card-header">
+            <span class="material-symbols-outlined card-header-icon">lock</span>
+            <h2 class="settings-card-title" id="password-section-title">Change Password</h2>
+        </div>
+        <div class="settings-card-body">
+            <form
+                id="form-change-password"
+                method="POST"
+                action="{{ url_for('settings_password') }}"
+                novalidate
+            >
+                <div class="form-group">
+                    <label for="current_password" class="form-label">Current Password</label>
+                    <input
+                        type="password"
+                        id="current_password"
+                        name="current_password"
+                        class="form-input"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password" class="form-label">New Password</label>
+                    <input
+                        type="password"
+                        id="new_password"
+                        name="new_password"
+                        class="form-input"
+                        required
+                        autocomplete="new-password"
+                        aria-describedby="password-hint"
+                    >
+                    <span id="password-hint" class="form-hint">Minimum 8 characters.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                    <input
+                        type="password"
+                        id="confirm_new_password"
+                        name="confirm_new_password"
+                        class="form-input"
+                        required
+                        autocomplete="new-password"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btn-change-password" class="btn btn-primary">
+                        <span class="material-symbols-outlined btn-icon">lock_reset</span>
+                        Change Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ---- Account Danger Zone ---- -->
+    <section class="settings-card settings-card-danger" aria-labelledby="danger-section-title">
+        <div class="settings-card-header">
+            <span class="material-symbols-outlined card-header-icon danger-icon">warning</span>
+            <h2 class="settings-card-title danger-title" id="danger-section-title">Danger Zone</h2>
+        </div>
+        <div class="settings-card-body">
+            <p class="danger-description">
+                Once you delete your account, all your expenses and data will be permanently removed.
+                This action cannot be undone.
+            </p>
+            <div class="form-actions">
+                <a href="/account/delete" id="btn-delete-account" class="btn btn-danger">
+                    <span class="material-symbols-outlined btn-icon">delete_forever</span>
+                    Delete My Account
+                </a>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

@@ -493,3 +493,58 @@ def get_highest_expense(user_id, path=None):
         return dict(row) if row else None
     finally:
         conn.close()
+
+
+# ------------------------------------------------------------------ #
+# Profile settings queries                                             #
+# ------------------------------------------------------------------ #
+
+
+def update_user_profile(user_id, name, email, path=None):
+    """
+    Update the name and email for the given user.
+    Raises sqlite3.IntegrityError if the new email is already used by
+    a different account (enforced by the UNIQUE constraint on users.email).
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "UPDATE users SET name = ?, email = ? WHERE id = ?",
+            (name, email, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def update_user_password(user_id, password_hash, path=None):
+    """
+    Update the password_hash for the given user.
+    The caller is responsible for verifying the current password and
+    hashing the new one before calling this function.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            (password_hash, user_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_user_full_by_id(user_id, path=None):
+    """
+    Retrieve name, email, and password_hash for a user by ID.
+    Used by the password-change route to verify the current password.
+    Returns a sqlite3.Row or None.
+    """
+    conn = get_db(path)
+    try:
+        return conn.execute(
+            "SELECT id, name, email, password_hash FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+    finally:
+        conn.close()
