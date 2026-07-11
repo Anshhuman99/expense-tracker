@@ -37,12 +37,14 @@ from database.queries import (
     get_month_category_spending,
     get_monthly_spending_trend,
     get_category_spending_breakdown,
+    get_highest_expense,
 )
 from werkzeug.security import check_password_hash
 import sqlite3
 import re
 import datetime
 import math
+import calendar
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 ALLOWED_CATEGORIES = [
@@ -526,6 +528,193 @@ def analytics():
         budget_comparison=budget_comparison,
         has_budgets=len(budgets_for_month) > 0,
         budget_month=budget_month,
+    )
+
+
+@app.route("/insights")
+def insights():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    # Fetch user info
+    user = get_user_by_id(user_id)
+
+    # Fetch all expenses
+    all_expenses = get_filtered_expenses(user_id)
+    has_data = len(all_expenses) > 0
+
+    if not has_data:
+        return render_template(
+            "insights.html",
+            user=user,
+            has_data=False,
+            stats={},
+            insights_list=[],
+            highest_expense=None,
+        )
+
+    # Calculate Lifetime Stats
+    lifetime_total = sum(exp["amount"] for exp in all_expenses)
+    transaction_count = len(all_expenses)
+
+    # Group expenses by YYYY-MM
+    monthly_expenses = {}
+    for exp in all_expenses:
+        m = exp["date"][:7]
+        monthly_expenses.setdefault(m, []).append(exp)
+
+    # Monthly average
+    months_count = len(monthly_expenses)
+    monthly_average = lifetime_total / months_count if months_count > 0 else 0.0
+
+    # Current month's daily run rate
+    today = datetime.date.today()
+    current_month_str = today.strftime("%Y-%m")
+    current_month_expenses = monthly_expenses.get(current_month_str, [])
+    current_month_total = sum(exp["amount"] for exp in current_month_expenses)
+
+    # Days elapsed in current month (or all days if month is in the past, but we focus on current month)
+    days_in_month = today.day
+    daily_average_current = (
+        current_month_total / days_in_month if days_in_month > 0 else 0.0
+    )
+
+    # Project month-end total
+    # Find number of days in the current month
+    _, total_days_in_month = calendar.monthrange(today.year, today.month)
+    projected_total = daily_average_current * total_days_in_month
+
+    # MoM comparison
+    # Get previous month string
+    prev_month_date = today.replace(day=1) - datetime.timedelta(days=1)
+    prev_month_str = prev_month_date.strftime("%Y-%m")
+    prev_month_expenses = monthly_expenses.get(prev_month_str, [])
+    prev_month_total = sum(exp["amount"] for exp in prev_month_expenses)
+
+    mom_change_pct = 0.0
+    if prev_month_total > 0:
+        mom_change_pct = (
+            (current_month_total - prev_month_total) / prev_month_total
+        ) * 100
+
+    # Top category breakdown percentage logic
+    category_totals = {}
+    for exp in all_expenses:
+        category_totals[exp["category"]] = (
+            category_totals.get(exp["category"], 0.0) + exp["amount"]
+        )
+
+    top_category = (
+        max(category_totals, key=category_totals.get) if category_totals else None
+    )
+    top_category_pct = 0.0
+    if top_category and lifetime_total > 0:
+        top_category_pct = (category_totals[top_category] / lifetime_total) * 100
+
+    # Highest single expense
+    highest_expense = get_highest_expense(user_id)
+
+    # Generate insights cards
+    insights_list = []
+
+    # 1. Month-over-month insight
+    if prev_month_total > 0:
+        if mom_change_pct > 10:
+            insights_list.append(
+                {
+                    "type": "warning",
+                    "icon": "trending_up",
+                    "title": "Spending Surge",
+                    "message": f"Your spending this month is {mom_change_pct:.1f}% higher than last month (₹{current_month_total:,.2f} vs ₹{prev_month_total:,.2f}).",
+                }
+            )
+        elif mom_change_pct < -10:
+            insights_list.append(
+                {
+                    "type": "success",
+                    "icon": "trending_down",
+                    "title": "Great Savings!",
+                    "message": f"Your spending this month is {abs(mom_change_pct):.1f}% lower than last month (₹{current_month_total:,.2f} vs ₹{prev_month_total:,.2f}).",
+                }
+            )
+        else:
+            insights_list.append(
+                {
+                    "type": "info",
+                    "icon": "trending_flat",
+                    "title": "Stable Spending",
+                    "message": f"Your spending this month is stable compared to last month (₹{current_month_total:,.2f} vs ₹{prev_month_total:,.2f}).",
+                }
+            )
+
+    # 2. Top heavy warning
+    if top_category and top_category_pct > 50:
+        insights_list.append(
+            {
+                "type": "warning",
+                "icon": "pie_chart",
+                "title": f"Dominant Category: {top_category}",
+                "message": f"{top_category} accounts for {top_category_pct:.1f}% of your total lifetime spending. Consider creating a monthly budget for this category.",
+            }
+        )
+
+    # 3. High expense tip
+    if highest_expense:
+        insights_list.append(
+            {
+                "type": "info",
+                "icon": "payments",
+                "title": "Largest Single Expense",
+                "message": f"Your purchase of '{highest_expense['description'] or highest_expense['category']}' on {highest_expense['date']} for ₹{highest_expense['amount']:,.2f} was your largest single expense.",
+            }
+        )
+
+    # 4. Budget Warning
+    # Fetch budgets for this month
+    budgets_for_month = get_budgets_for_month(user_id, current_month_str)
+    actual_spending = get_month_category_spending(user_id, current_month_str)
+    for b in budgets_for_month:
+        actual = actual_spending.get(b["category"], 0.0)
+        limit = b["amount"]
+        if actual > limit:
+            insights_list.append(
+                {
+                    "type": "danger",
+                    "icon": "error",
+                    "title": f"Budget Exceeded: {b['category']}",
+                    "message": f"You spent ₹{actual:,.2f} on {b['category']}, exceeding your budget of ₹{limit:,.2f} by ₹{(actual - limit):,.2f}.",
+                }
+            )
+        elif actual > limit * 0.8:
+            insights_list.append(
+                {
+                    "type": "warning",
+                    "icon": "warning",
+                    "title": f"Budget Alert: {b['category']}",
+                    "message": f"You spent ₹{actual:,.2f} on {b['category']}, which is { (actual/limit)*100:.1f}% of your budget limit (₹{limit:,.2f}).",
+                }
+            )
+
+    stats = {
+        "lifetime_total": round(lifetime_total, 2),
+        "transaction_count": transaction_count,
+        "monthly_average": round(monthly_average, 2),
+        "daily_average_current": round(daily_average_current, 2),
+        "projected_total": round(projected_total, 2),
+        "current_month_total": round(current_month_total, 2),
+        "prev_month_total": round(prev_month_total, 2),
+        "mom_change_pct": round(mom_change_pct, 2),
+    }
+
+    return render_template(
+        "insights.html",
+        user=user,
+        has_data=True,
+        stats=stats,
+        insights_list=insights_list,
+        highest_expense=highest_expense,
     )
 
 

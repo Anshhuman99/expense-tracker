@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Insights — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/insights.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/empty_states.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="insights-container">
+
+    <!-- Header Section -->
+    <div class="insights-header">
+        <h1>Spending Insights</h1>
+        <p class="insights-subtitle">Understand your spending behavior and financial run rate</p>
+    </div>
+
+    {% if not has_data %}
+    <!-- Empty State -->
+    <div class="empty-state-card">
+        <div class="empty-state-icon">
+            <span class="material-symbols-outlined">analytics</span>
+        </div>
+        <h3>No Insights Available</h3>
+        <p class="empty-state-text">Start logging your daily expenses to unlock personalized spending tips and insights!</p>
+        <a href="{{ url_for('add_expense') }}" class="btn-cta-large">Add Your First Expense</a>
+    </div>
+    {% else %}
+
+    <!-- Metric Cards Grid -->
+    <div class="metrics-grid">
+        <!-- Card 1: Lifetime Overview -->
+        <div class="metric-card">
+            <div class="metric-icon-wrapper">
+                <span class="material-symbols-outlined metric-icon">all_inbox</span>
+            </div>
+            <div class="metric-label">Lifetime Spent</div>
+            <div class="metric-value">₹{{ "{:,.2f}".format(stats.lifetime_total) }}</div>
+            <div class="metric-footer">Across {{ stats.transaction_count }} transactions</div>
+        </div>
+
+        <!-- Card 2: Average Monthly -->
+        <div class="metric-card">
+            <div class="metric-icon-wrapper">
+                <span class="material-symbols-outlined metric-icon">calendar_today</span>
+            </div>
+            <div class="metric-label">Monthly Average</div>
+            <div class="metric-value">₹{{ "{:,.2f}".format(stats.monthly_average) }}</div>
+            <div class="metric-footer">Based on logged months</div>
+        </div>
+
+        <!-- Card 3: Daily Run Rate (Current Month) -->
+        <div class="metric-card">
+            <div class="metric-icon-wrapper">
+                <span class="material-symbols-outlined metric-icon">schedule</span>
+            </div>
+            <div class="metric-label">Daily Avg (This Month)</div>
+            <div class="metric-value">₹{{ "{:,.2f}".format(stats.daily_average_current) }}</div>
+            <div class="metric-footer">Projected Month End: ₹{{ "{:,.2f}".format(stats.projected_total) }}</div>
+        </div>
+
+        <!-- Card 4: Largest Single Expense -->
+        {% if highest_expense %}
+        <div class="metric-card">
+            <div class="metric-icon-wrapper">
+                <span class="material-symbols-outlined metric-icon">payments</span>
+            </div>
+            <div class="metric-label">Largest Expense</div>
+            <div class="metric-value">₹{{ "{:,.2f}".format(highest_expense.amount) }}</div>
+            <div class="metric-footer">{{ highest_expense.category }} on {{ highest_expense.date }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Insights List & Tips Section -->
+    <div class="insights-section">
+        <h2 class="section-title">Personalized Insights</h2>
+        {% if insights_list %}
+            <div class="insights-list">
+                {% for insight in insights_list %}
+                    <div class="insight-alert-card alert-{{ insight.type }}">
+                        <div class="insight-alert-icon">
+                            <span class="material-symbols-outlined">{{ insight.icon }}</span>
+                        </div>
+                        <div class="insight-alert-body">
+                            <h3 class="insight-alert-title">{{ insight.title }}</h3>
+                            <p class="insight-alert-message">{{ insight.message }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="insight-alert-card alert-info">
+                <div class="insight-alert-icon">
+                    <span class="material-symbols-outlined">info</span>
+                </div>
+                <div class="insight-alert-body">
+                    <h3 class="insight-alert-title">Keep Tracking!</h3>
+                    <p class="insight-alert-message">We are processing your logs. Once you have logged data spanning multiple categories or months, personalized insights will appear here.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

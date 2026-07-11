@@ -1,0 +1,182 @@
+.insights-container {
+    max-width: var(--max-width);
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+.insights-header {
+    margin-bottom: 2rem;
+}
+
+.insights-header h1 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+}
+
+.insights-subtitle {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+}
+
+/* Metrics Grid matching Profile Stats Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.metric-card {
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-family: var(--font-body);
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+}
+
+.metric-footer {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    margin-top: auto;
+}
+
+/* Hide metric-icon-wrapper to match the clean design of profile stats */
+.metric-icon-wrapper {
+    display: none;
+}
+
+/* Insights Section */
+.insights-section {
+    margin-top: 2rem;
+    background: var(--paper-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.03);
+}
+
+.section-title {
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+}
+
+.insights-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.insight-alert-card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.insight-alert-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.insight-alert-icon .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.insight-alert-body {
+    flex: 1;
+}
+
+.insight-alert-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 0.25rem 0;
+}
+
+.insight-alert-message {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Alert Variants with Colors from Profile/Budgets styling variables */
+.alert-info .insight-alert-icon {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+.alert-info {
+    border-left: 4px solid var(--accent);
+}
+
+.alert-success .insight-alert-icon {
+    background: var(--budget-ok-light);
+    color: var(--budget-ok);
+}
+.alert-success {
+    border-left: 4px solid var(--budget-ok);
+}
+
+.alert-warning .insight-alert-icon {
+    background: var(--budget-warning-light);
+    color: var(--budget-warning);
+}
+.alert-warning {
+    border-left: 4px solid var(--budget-warning);
+}
+
+.alert-danger .insight-alert-icon {
+    background: var(--budget-exceeded-light);
+    color: var(--budget-exceeded);
+}
+.alert-danger {
+    border-left: 4px solid var(--budget-exceeded);
+}
+
+@media (max-width: 900px) {
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .insights-header h1 {
+        font-size: 2rem;
+    }
+}
