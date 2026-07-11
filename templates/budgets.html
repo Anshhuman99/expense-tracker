@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Budgets — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/budgets.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/empty_states.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="budgets-container">
+
+    <!-- Page Header -->
+    <div class="budgets-header">
+        <div class="budgets-title-group">
+            <h1>Monthly Budgets</h1>
+            <p class="budgets-subtitle">Track your spending against set limits</p>
+        </div>
+        <a href="{{ url_for('add_budget') }}" class="btn-primary" id="add-budget-btn">
+            <span class="material-symbols-outlined btn-icon">add</span>
+            Add Budget
+        </a>
+    </div>
+
+    <!-- Month Navigator -->
+    <div class="month-nav" role="navigation" aria-label="Month navigation">
+        <a href="{{ url_for('budgets', month=prev_month) }}" class="month-arrow" aria-label="Previous month: {{ prev_month }}">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+        <span class="month-label">{{ month_label }}</span>
+        <a href="{{ url_for('budgets', month=next_month) }}" class="month-arrow" aria-label="Next month: {{ next_month }}">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+    </div>
+
+    {% if budgets|length == 0 %}
+    <!-- Empty State -->
+    <div class="empty-state-card" id="budgets-empty-state">
+        <div class="empty-state-icon">
+            <span class="material-symbols-outlined">account_balance_wallet</span>
+        </div>
+        <h3>No Budgets Set</h3>
+        <p class="empty-state-text">
+            You haven't set any budgets for {{ month_label }}.
+            Start tracking your spending limits to stay on top of your finances!
+        </p>
+        <a href="{{ url_for('add_budget') }}" class="btn-cta-large" id="create-first-budget-btn">Create Your First Budget</a>
+    </div>
+
+    {% else %}
+    <!-- Budget Summary Bar -->
+    <div class="budget-summary">
+        <span class="budget-summary-count">{{ budgets|length }} budget{{ 's' if budgets|length != 1 }} set</span>
+        <span class="budget-summary-indicators">
+            {% set exceeded_count = budgets | selectattr('status', 'equalto', 'exceeded') | list | length %}
+            {% set warning_count = budgets | selectattr('status', 'equalto', 'warning') | list | length %}
+            {% if exceeded_count > 0 %}
+            <span class="status-chip status-exceeded">
+                <span class="material-symbols-outlined chip-icon">warning</span>
+                {{ exceeded_count }} exceeded
+            </span>
+            {% endif %}
+            {% if warning_count > 0 %}
+            <span class="status-chip status-warning">
+                <span class="material-symbols-outlined chip-icon">trending_up</span>
+                {{ warning_count }} approaching
+            </span>
+            {% endif %}
+        </span>
+    </div>
+
+    <!-- Budget Cards Grid -->
+    <div class="budget-grid" id="budget-grid">
+        {% for b in budgets %}
+        <article class="budget-card budget-{{ b.status }}" id="budget-card-{{ b.id }}">
+
+            <!-- Card Header: Category Badge + Actions -->
+            <div class="budget-card-header">
+                <span class="category-badge {{ b.category.lower() }}">{{ b.category }}</span>
+                <div class="budget-actions">
+                    <a href="{{ url_for('edit_budget', id=b.id) }}" class="btn-edit" aria-label="Edit {{ b.category }} budget" id="edit-budget-{{ b.id }}">Edit</a>
+                    <a href="{{ url_for('delete_budget_route', id=b.id) }}" class="btn-delete" aria-label="Delete {{ b.category }} budget" id="delete-budget-{{ b.id }}">Delete</a>
+                </div>
+            </div>
+
+            <!-- Spent vs Limit Amounts -->
+            <div class="budget-amounts">
+                <div class="budget-spent-group">
+                    <span class="budget-amounts-label">Spent</span>
+                    <span class="budget-spent budget-spent-{{ b.status }}">₹{{ "{:,.2f}".format(b.spent) }}</span>
+                </div>
+                <div class="budget-divider">
+                    <span class="budget-separator">/</span>
+                </div>
+                <div class="budget-limit-group">
+                    <span class="budget-amounts-label">Limit</span>
+                    <span class="budget-limit">₹{{ "{:,.2f}".format(b.amount) }}</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="budget-progress-track" role="progressbar" aria-valuenow="{{ b.percentage }}" aria-valuemin="0" aria-valuemax="100" aria-label="{{ b.category }} budget: {{ b.percentage }}% used">
+                <div class="budget-progress-bar budget-progress-{{ b.status }}" style="width: {{ [b.percentage, 100]|min }}%"></div>
+            </div>
+
+            <!-- Footer: % used + remaining/over -->
+            <div class="budget-footer">
+                <span class="budget-pct budget-pct-{{ b.status }}">{{ b.percentage }}% used</span>
+                <span class="budget-remaining {% if b.spent > b.amount %}budget-over{% endif %}">
+                    {% if b.spent <= b.amount %}
+                        ₹{{ "{:,.2f}".format(b.amount - b.spent) }} remaining
+                    {% else %}
+                        ₹{{ "{:,.2f}".format(b.spent - b.amount) }} over budget
+                    {% endif %}
+                </span>
+            </div>
+
+        </article>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

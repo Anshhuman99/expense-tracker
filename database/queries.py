@@ -240,3 +240,115 @@ def get_expense_by_id(expense_id, path=None):
         return dict(row) if row else None
     finally:
         conn.close()
+
+
+# ------------------------------------------------------------------ #
+# Budget queries                                                       #
+# ------------------------------------------------------------------ #
+
+
+def create_budget(user_id, category, amount, month, path=None):
+    """
+    Insert a new budget row for the given user, category, and month.
+    Raises sqlite3.IntegrityError if a budget for that user+category+month
+    already exists (enforced by UNIQUE constraint on the budgets table).
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "INSERT INTO budgets (user_id, category, amount, month) VALUES (?, ?, ?, ?)",
+            (user_id, category, round(amount, 2), month),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_budget_by_id(budget_id, path=None):
+    """
+    Retrieve a single budget row by its ID.
+    Returns a dict with keys: id, user_id, category, amount, month
+    or None if the budget does not exist.
+    """
+    conn = get_db(path)
+    try:
+        row = conn.execute(
+            "SELECT id, user_id, category, amount, month FROM budgets WHERE id = ?",
+            (budget_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def get_budgets_for_month(user_id, month, path=None):
+    """
+    Return all budgets for a user in a given month, ordered alphabetically by category.
+    month format: 'YYYY-MM'
+    Returns a list of dicts with keys: id, user_id, category, amount, month.
+    """
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, user_id, category, amount, month
+            FROM budgets
+            WHERE user_id = ? AND month = ?
+            ORDER BY category ASC
+            """,
+            (user_id, month),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def update_budget(budget_id, category, amount, month, path=None):
+    """
+    Update an existing budget row.
+    Raises sqlite3.IntegrityError if the new category+month combination
+    already exists for the same user (UNIQUE constraint).
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "UPDATE budgets SET category = ?, amount = ?, month = ? WHERE id = ?",
+            (category, round(amount, 2), month, budget_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_budget(budget_id, path=None):
+    """
+    Delete a budget row by ID.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute("DELETE FROM budgets WHERE id = ?", (budget_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def get_month_category_spending(user_id, month, path=None):
+    """
+    Return a dict mapping category -> total spent for the given user and month.
+    Queries the expenses table using date LIKE 'YYYY-MM%'.
+    All totals are rounded to 2 decimal places.
+    """
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT category, SUM(amount) AS total
+            FROM expenses
+            WHERE user_id = ? AND date LIKE ?
+            GROUP BY category
+            """,
+            (user_id, f"{month}%"),
+        ).fetchall()
+        return {row["category"]: round(row["total"], 2) for row in rows}
+    finally:
+        conn.close()

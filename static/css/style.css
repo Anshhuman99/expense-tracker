@@ -28,6 +28,14 @@
     --radius-sm: 6px;
     --radius-md: 12px;
     --radius-lg: 20px;
+
+    /* Budget status colours */
+    --budget-ok: #16a34a;
+    --budget-ok-light: #dcfce7;
+    --budget-warning: #d97706;
+    --budget-warning-light: #fef3c7;
+    --budget-exceeded: #dc2626;
+    --budget-exceeded-light: #fee2e2;
 }
 
 /* ------------------------------------------------------------------ */
