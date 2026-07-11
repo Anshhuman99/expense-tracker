@@ -85,7 +85,17 @@ def get_summary_stats(user_id, path=None):
         conn.close()
 
 
-def get_recent_transactions(user_id, limit=10, path=None):
+def _get_sort_clause(sort_by, order):
+    """
+    Validate and return sanitised column and order direction.
+    """
+    allowed_cols = {"date": "date", "category": "category", "amount": "amount"}
+    sort_col = allowed_cols.get(sort_by, "date")
+    sort_order = "ASC" if order.upper() == "ASC" else "DESC"
+    return sort_col, sort_order
+
+
+def get_recent_transactions(user_id, limit=10, sort_by="date", order="DESC", path=None):
     """
     Retrieve the most recent transactions (expenses) for a specific user,
     ordered from newest to oldest.
@@ -93,19 +103,23 @@ def get_recent_transactions(user_id, limit=10, path=None):
     Args:
         user_id (int): The ID of the user.
         limit (int): The maximum number of transactions to return. Default is 10.
+        sort_by (str): The column to sort by. Default is 'date'.
+        order (str): The order direction. Default is 'DESC'.
         path (str, optional): Custom database file path.
 
     Returns:
         list of dict: A list of transactions containing keys: id, date, description, category, amount.
     """
+    sort_col, sort_order = _get_sort_clause(sort_by, order)
+
     conn = get_db(path)
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT id, date, description, category, amount 
             FROM expenses 
             WHERE user_id = ? 
-            ORDER BY date DESC, id DESC 
+            ORDER BY {sort_col} {sort_order}, id DESC 
             LIMIT ?
             """,
             (user_id, limit),
@@ -185,12 +199,16 @@ def get_filtered_expenses(
     start_date=None,
     end_date=None,
     search_query=None,
+    sort_by="date",
+    order="DESC",
     limit=None,
     path=None,
 ):
     """
     Retrieve expenses for a specific user filtered by category, date range, and search text.
     """
+    sort_col, sort_order = _get_sort_clause(sort_by, order)
+
     conn = get_db(path)
     try:
         query = "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ?"
@@ -213,7 +231,7 @@ def get_filtered_expenses(
             search_param = f"%{search_query}%"
             params.extend([search_param, search_param])
 
-        query += " ORDER BY date DESC, id DESC"
+        query += f" ORDER BY {sort_col} {sort_order}, id DESC"
 
         if limit:
             query += " LIMIT ?"
