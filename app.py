@@ -47,11 +47,17 @@ import re
 import datetime
 import math
 import calendar
+import html
 import csv
 from io import StringIO, BytesIO
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
+from reportlab.lib.pagesizes import letter
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfgen import canvas
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 ALLOWED_CATEGORIES = [
@@ -144,6 +150,205 @@ def _build_expense_workbook(expenses):
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
     return wb
+
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            super().showPage()
+        super().save()
+
+    def draw_page_number(self, page_count):
+        self.setFont("Helvetica", 9)
+        self.setFillColor(colors.HexColor("#6B7280"))
+        page_text = f"Page {self._pageNumber} of {page_count}"
+        self.drawRightString(letter[0] - 54, 36, page_text)
+
+
+def _build_expense_pdf(expenses, total_spent, total_count, active_filters):
+    """
+    Build and return a PDF report in-memory using reportlab.
+    """
+    pdf_buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        pdf_buffer,
+        pagesize=letter,
+        rightMargin=54,
+        leftMargin=54,
+        topMargin=54,
+        bottomMargin=54,
+    )
+
+    styles = getSampleStyleSheet()
+
+    # Custom styles
+    title_style = ParagraphStyle(
+        "DocTitle",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
+        fontSize=24,
+        leading=28,
+        textColor=colors.HexColor("#2D6A4F"),
+        spaceAfter=6,
+    )
+
+    subtitle_style = ParagraphStyle(
+        "DocSubtitle",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor("#4B5563"),
+        spaceAfter=15,
+    )
+
+    label_style = ParagraphStyle(
+        "SummaryLabel",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        leading=14,
+        textColor=colors.HexColor("#374151"),
+    )
+
+    val_style = ParagraphStyle(
+        "SummaryVal",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=11,
+        leading=14,
+        textColor=colors.HexColor("#111827"),
+    )
+
+    cell_style = ParagraphStyle(
+        "TableCell",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#1F2937"),
+    )
+
+    header_cell_style = ParagraphStyle(
+        "TableHeaderCell",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=9,
+        leading=12,
+        textColor=colors.white,
+    )
+
+    story = []
+
+    # Title
+    story.append(Paragraph("Spendly Expense Report", title_style))
+
+    # Subtitle
+    timestamp_str = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%d %H:%M:%S UTC"
+    )
+    filters_desc = []
+    if active_filters.get("category"):
+        filters_desc.append(f"Category: {html.escape(active_filters['category'])}")
+    if active_filters.get("start_date"):
+        filters_desc.append(f"From: {html.escape(active_filters['start_date'])}")
+    if active_filters.get("end_date"):
+        filters_desc.append(f"To: {html.escape(active_filters['end_date'])}")
+    if active_filters.get("search_query"):
+        filters_desc.append(f"Search: '{html.escape(active_filters['search_query'])}'")
+
+    filters_text = ", ".join(filters_desc) if filters_desc else "All Expenses"
+    story.append(
+        Paragraph(
+            f"Generated on {timestamp_str} | Filters: {filters_text}", subtitle_style
+        )
+    )
+    story.append(Spacer(1, 10))
+
+    # Summary table
+    summary_data = [
+        [
+            Paragraph("Total Transactions:", label_style),
+            Paragraph(html.escape(str(total_count)), val_style),
+            Paragraph("Total Spending:", label_style),
+            Paragraph(html.escape(f"${total_spent:.2f}"), val_style),
+        ]
+    ]
+    summary_table = Table(summary_data, colWidths=[120, 80, 100, 100])
+    summary_table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F3F4F6")),
+                ("PADDING", (0, 0), (-1, -1), 8),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+            ]
+        )
+    )
+    story.append(summary_table)
+    story.append(Spacer(1, 20))
+
+    # Expense Table
+    table_data = [
+        [
+            Paragraph("Date", header_cell_style),
+            Paragraph("Category", header_cell_style),
+            Paragraph("Description", header_cell_style),
+            Paragraph("Amount", header_cell_style),
+        ]
+    ]
+
+    for exp in expenses:
+        table_data.append(
+            [
+                Paragraph(html.escape(exp["date"]), cell_style),
+                Paragraph(
+                    html.escape(_sanitize_csv_value(exp["category"])), cell_style
+                ),
+                Paragraph(
+                    html.escape(_sanitize_csv_value(exp["description"] or "")),
+                    cell_style,
+                ),
+                Paragraph(html.escape(f"${exp['amount']:.2f}"), cell_style),
+            ]
+        )
+
+    expense_table = Table(table_data, colWidths=[80, 100, 220, 100])
+
+    t_style = [
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2D6A4F")),
+        ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#E5E7EB")),
+    ]
+
+    # Alternating row colors
+    for i in range(1, len(table_data)):
+        if i % 2 == 0:
+            t_style.append(("BACKGROUND", (0, i), (-1, i), colors.HexColor("#F9FAFB")))
+
+    expense_table.setStyle(TableStyle(t_style))
+    story.append(expense_table)
+
+    doc.build(story, canvasmaker=NumberedCanvas)
+    pdf_buffer.seek(0)
+    return pdf_buffer
 
 
 app = Flask(__name__)
@@ -909,6 +1114,31 @@ def export_excel():
         excel_buffer.getvalue(),
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@app.route("/expenses/export/pdf")
+def export_pdf():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    active_filters = _get_filter_params()
+    expenses = get_filtered_expenses(
+        user_id=user_id, limit=None, offset=None, **active_filters
+    )
+
+    total_count = len(expenses)
+    total_spent = sum(round(float(exp["amount"]), 2) for exp in expenses)
+
+    pdf_buffer = _build_expense_pdf(expenses, total_spent, total_count, active_filters)
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"spendly_report_{timestamp}.pdf"
+
+    response = Response(pdf_buffer.getvalue(), mimetype="application/pdf")
     response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
