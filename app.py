@@ -40,8 +40,11 @@ from database.queries import (
     get_monthly_spending_trend,
     get_category_spending_breakdown,
     get_highest_expense,
+    update_user_profile,
+    update_user_password,
+    get_user_full_by_id,
 )
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
 import re
 import datetime
@@ -1594,6 +1597,89 @@ def trigger_500():
     if not (app.config.get("TESTING") or app.debug):
         abort(404)
     abort(500)
+
+
+# ------------------------------------------------------------------ #
+# Profile Settings routes (Step 23)                                   #
+# ------------------------------------------------------------------ #
+
+
+@app.route("/settings")
+def settings():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    return render_template("settings.html", user=user)
+
+
+@app.route("/settings/profile", methods=["POST"])
+def settings_profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+
+    if not name:
+        flash("Name is required.", "error")
+        return redirect(url_for("settings"))
+
+    if not email or not EMAIL_REGEX.match(email):
+        flash("Invalid email address.", "error")
+        return redirect(url_for("settings"))
+
+    try:
+        update_user_profile(user_id, name, email)
+        session["user_name"] = name
+        flash("Profile updated successfully.", "success")
+    except sqlite3.IntegrityError:
+        flash("Email already in use by another account.", "error")
+
+    return redirect(url_for("settings"))
+
+
+@app.route("/settings/password", methods=["POST"])
+def settings_password():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    current_password = request.form.get("current_password", "")
+    new_password = request.form.get("new_password", "")
+    confirm_new_password = request.form.get("confirm_new_password", "")
+
+    user_row = get_user_full_by_id(user_id)
+    if not user_row:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    if not check_password_hash(user_row["password_hash"], current_password):
+        flash("Current password is incorrect.", "error")
+        return redirect(url_for("settings"))
+
+    if len(new_password) < 8:
+        flash("New password must be at least 8 characters.", "error")
+        return redirect(url_for("settings"))
+
+    if new_password != confirm_new_password:
+        flash("New passwords do not match.", "error")
+        return redirect(url_for("settings"))
+
+    update_user_password(user_id, generate_password_hash(new_password))
+    flash("Password changed successfully.", "success")
+    return redirect(url_for("settings"))
 
 
 if __name__ == "__main__":
