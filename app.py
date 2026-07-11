@@ -28,6 +28,12 @@ from database.queries import (
     get_categories,
     get_filtered_expenses,
     get_expense_by_id,
+    create_budget,
+    get_budget_by_id,
+    get_budgets_for_month,
+    update_budget,
+    delete_budget as db_delete_budget,
+    get_month_category_spending,
 )
 from werkzeug.security import check_password_hash
 import sqlite3
@@ -441,6 +447,232 @@ def delete_expense(id):
         "delete_expense.html",
         expense=expense,
     )
+
+
+# ------------------------------------------------------------------ #
+# Budget Routes & Helpers                                            #
+# ------------------------------------------------------------------ #
+
+
+def validate_budget_data(category, amount_str, month_str):
+    """
+    Validates category, amount, and month for budget creation/updates.
+    Returns (amount, error_messages_list).
+    """
+    errors = []
+    amount = None
+
+    if not category or category not in ALLOWED_CATEGORIES:
+        errors.append("Please select a valid category.")
+
+    if not amount_str:
+        errors.append("Amount is required.")
+    else:
+        try:
+            amount = float(amount_str)
+            if not math.isfinite(amount) or amount <= 0:
+                errors.append("Amount must be a positive number.")
+        except ValueError:
+            errors.append("Amount must be a valid number.")
+
+    if not month_str:
+        errors.append("Month is required.")
+    else:
+        try:
+            datetime.datetime.strptime(month_str, "%Y-%m")
+        except ValueError:
+            errors.append("Invalid month format. Use YYYY-MM.")
+
+    return amount, errors
+
+
+@app.route("/budgets")
+def budgets():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    # Determine selected month (default: current month)
+    month = request.args.get("month", "").strip()
+    if month:
+        # Validate month format; fall back to current month on bad input
+        try:
+            month_date = datetime.datetime.strptime(month, "%Y-%m")
+        except ValueError:
+            month_date = datetime.datetime.today()
+            month = month_date.strftime("%Y-%m")
+    else:
+        month_date = datetime.datetime.today()
+        month = month_date.strftime("%Y-%m")
+
+    # Calculate previous and next months for navigation links
+    if month_date.month == 1:
+        prev_month = f"{month_date.year - 1}-12"
+    else:
+        prev_month = f"{month_date.year}-{month_date.month - 1:02d}"
+
+    if month_date.month == 12:
+        next_month = f"{month_date.year + 1}-01"
+    else:
+        next_month = f"{month_date.year}-{month_date.month + 1:02d}"
+
+    month_label = month_date.strftime("%B %Y")
+
+    # Fetch budgets for this month and actual spending from expenses
+    budget_list = get_budgets_for_month(user_id, month)
+    spending = get_month_category_spending(user_id, month)
+
+    # Enrich each budget dict with spent amount, percentage, and status
+    for b in budget_list:
+        spent = spending.get(b["category"], 0.0)
+        b["spent"] = round(spent, 2)
+        b["percentage"] = (
+            round((spent / b["amount"]) * 100, 1) if b["amount"] > 0 else 0.0
+        )
+        if b["percentage"] > 100:
+            b["status"] = "exceeded"
+        elif b["percentage"] > 75:
+            b["status"] = "warning"
+        else:
+            b["status"] = "ok"
+
+    return render_template(
+        "budgets.html",
+        budgets=budget_list,
+        month=month,
+        month_label=month_label,
+        prev_month=prev_month,
+        next_month=next_month,
+    )
+
+
+@app.route("/budgets/add", methods=["GET", "POST"])
+def add_budget():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    default_month = datetime.date.today().strftime("%Y-%m")
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        amount_str = request.form.get("amount", "").strip()
+        month = request.form.get("month", "").strip()
+
+        amount, errors = validate_budget_data(category, amount_str, month)
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template(
+                "add_budget.html",
+                categories=ALLOWED_CATEGORIES,
+                category=category,
+                amount=amount_str,
+                month=month or default_month,
+            )
+
+        try:
+            create_budget(user_id, category, amount, month)
+            flash("Budget created successfully!", "success")
+            return redirect(url_for("budgets", month=month))
+        except sqlite3.IntegrityError:
+            flash("A budget for this category and month already exists.", "error")
+            return render_template(
+                "add_budget.html",
+                categories=ALLOWED_CATEGORIES,
+                category=category,
+                amount=amount_str,
+                month=month,
+            )
+
+    return render_template(
+        "add_budget.html",
+        categories=ALLOWED_CATEGORIES,
+        category="",
+        amount="",
+        month=default_month,
+    )
+
+
+@app.route("/budgets/<int:id>/edit", methods=["GET", "POST"])
+def edit_budget(id):
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    budget = get_budget_by_id(id)
+    if not budget:
+        abort(404)
+    if budget["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        category = request.form.get("category", "").strip()
+        amount_str = request.form.get("amount", "").strip()
+        month = request.form.get("month", "").strip()
+
+        amount, errors = validate_budget_data(category, amount_str, month)
+
+        if errors:
+            for error in errors:
+                flash(error, "error")
+            return render_template(
+                "edit_budget.html",
+                budget=budget,
+                categories=ALLOWED_CATEGORIES,
+                category=category,
+                amount=amount_str,
+                month=month,
+            )
+
+        try:
+            update_budget(id, category, amount, month)
+            flash("Budget updated successfully!", "success")
+            return redirect(url_for("budgets", month=month))
+        except sqlite3.IntegrityError:
+            flash("A budget for this category and month already exists.", "error")
+            return render_template(
+                "edit_budget.html",
+                budget=budget,
+                categories=ALLOWED_CATEGORIES,
+                category=category,
+                amount=amount_str,
+                month=month,
+            )
+
+    return render_template(
+        "edit_budget.html",
+        budget=budget,
+        categories=ALLOWED_CATEGORIES,
+        category=budget["category"],
+        amount=budget["amount"],
+        month=budget["month"],
+    )
+
+
+@app.route("/budgets/<int:id>/delete", methods=["GET", "POST"])
+def delete_budget_route(id):
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    budget = get_budget_by_id(id)
+    if not budget:
+        abort(404)
+    if budget["user_id"] != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        db_delete_budget(id)
+        flash("Budget deleted successfully!", "success")
+        return redirect(url_for("budgets", month=budget["month"]))
+
+    return render_template("delete_budget.html", budget=budget)
 
 
 # ------------------------------------------------------------------ #

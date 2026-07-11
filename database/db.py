@@ -36,6 +36,20 @@ def init_db(path=None):
         );
     """)
     conn.commit()
+
+    # Apply numbered SQL migrations from database/migrations/ in sorted order.
+    # All migrations must use CREATE TABLE IF NOT EXISTS so they are idempotent.
+    migrations_dir = os.path.join(os.path.dirname(__file__), "migrations")
+    if os.path.isdir(migrations_dir):
+        migration_files = sorted(
+            f for f in os.listdir(migrations_dir) if f.endswith(".sql")
+        )
+        for mf in migration_files:
+            with open(os.path.join(migrations_dir, mf), "r") as fh:
+                conn.executescript(fh.read())
+        if migration_files:
+            conn.commit()
+
     conn.close()
 
 
