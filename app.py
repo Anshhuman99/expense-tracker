@@ -372,14 +372,17 @@ def profile():
     category = request.args.get("category", "").strip()
     start_date = request.args.get("start_date", "").strip()
     end_date = request.args.get("end_date", "").strip()
+    raw_search = request.args.get("search_query") or request.args.get("q") or ""
+    search_query = raw_search.strip()[:100]
 
     active_filters = {
         "category": category,
         "start_date": start_date,
         "end_date": end_date,
+        "search_query": search_query,
     }
 
-    is_filtered = any([category, start_date, end_date])
+    is_filtered = any([category, start_date, end_date, search_query])
 
     # Retrieve user's logged categories dynamically
     categories = get_categories(user_id)
@@ -418,6 +421,7 @@ def profile():
             category=category,
             start_date=start_date,
             end_date=end_date,
+            search_query=search_query,
             limit=100,
         )
     else:
