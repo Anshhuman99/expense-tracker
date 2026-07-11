@@ -109,6 +109,22 @@
     color: var(--ink);
 }
 
+.btn-excel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    text-decoration: none;
+}
+
+.btn-excel:hover {
+    background: var(--paper-warm);
+    border-color: var(--ink-muted);
+    color: var(--ink);
+}
+
 /* Expense Table */
 .table-responsive {
     overflow-x: auto;

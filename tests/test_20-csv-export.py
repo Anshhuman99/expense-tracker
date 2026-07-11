@@ -42,8 +42,8 @@ def test_export_csv_metadata_and_headers(client):
 
     disposition = response.headers.get("Content-Disposition", "")
     assert "attachment" in disposition
-    assert "filename=spendly_expenses_" in disposition
-    assert disposition.endswith(".csv")
+    assert 'filename="spendly_expenses_' in disposition
+    assert disposition.endswith('.csv"')
 
 
 def test_export_csv_content(client):
