@@ -548,3 +548,22 @@ def get_user_full_by_id(user_id, path=None):
         ).fetchone()
     finally:
         conn.close()
+
+
+def delete_user_account(user_id, path=None):
+    """
+    Delete the user's account and all associated expenses and budgets inside a transaction.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute("BEGIN TRANSACTION")
+        # Explicitly clean up referencing tables since schema doesn't have ON DELETE CASCADE
+        conn.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM budgets WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()

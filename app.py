@@ -43,6 +43,7 @@ from database.queries import (
     update_user_profile,
     update_user_password,
     get_user_full_by_id,
+    delete_user_account,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
@@ -1680,6 +1681,52 @@ def settings_password():
     update_user_password(user_id, generate_password_hash(new_password))
     flash("Password changed successfully.", "success")
     return redirect(url_for("settings"))
+
+
+# ------------------------------------------------------------------ #
+# Account Deletion routes (Step 24)                                  #
+# ------------------------------------------------------------------ #
+
+
+@app.route("/account/delete", methods=["GET", "POST"])
+def delete_account():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        password = request.form.get("password", "")
+
+        user_row = get_user_full_by_id(user_id)
+        if not user_row:
+            session.clear()
+            flash("User session invalid. Please log in again.", "error")
+            return redirect(url_for("login"))
+
+        if not check_password_hash(user_row["password_hash"], password):
+            flash("Incorrect password. Account deletion aborted.", "error")
+            return redirect(url_for("delete_account"))
+
+        try:
+            delete_user_account(user_id)
+            session.clear()
+            flash("Your account has been permanently deleted.", "success")
+            return redirect(url_for("landing"))
+        except Exception as e:
+            flash(
+                "An error occurred while deleting your account. Please try again.",
+                "error",
+            )
+            return redirect(url_for("settings"))
+
+    return render_template("delete_account.html", user=user)
 
 
 if __name__ == "__main__":
