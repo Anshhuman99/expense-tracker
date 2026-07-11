@@ -141,6 +141,52 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Controls -->
+            {% if total_pages > 1 %}
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing {{ start_idx }}–{{ end_idx }} of {{ total_count }} expenses
+                </div>
+                <div class="pagination-controls">
+                    {% if page > 1 %}
+                    <a href="{{ url_for('profile', page=page-1, category=active_filters.category, start_date=active_filters.start_date, end_date=active_filters.end_date, search_query=active_filters.search_query, sort_by=active_filters.sort_by, order=active_filters.order) }}" class="btn-page">
+                        <span class="material-symbols-outlined">chevron_left</span> Previous
+                    </a>
+                    {% else %}
+                    <span class="btn-page disabled">
+                        <span class="material-symbols-outlined">chevron_left</span> Previous
+                    </span>
+                    {% endif %}
+
+                    <div class="page-numbers">
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p == page %}
+                            <span class="btn-page active">{{ p }}</span>
+                            {% else %}
+                            <a href="{{ url_for('profile', page=p, category=active_filters.category, start_date=active_filters.start_date, end_date=active_filters.end_date, search_query=active_filters.search_query, sort_by=active_filters.sort_by, order=active_filters.order) }}" class="btn-page">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% if page < total_pages %}
+                    <a href="{{ url_for('profile', page=page+1, category=active_filters.category, start_date=active_filters.start_date, end_date=active_filters.end_date, search_query=active_filters.search_query, sort_by=active_filters.sort_by, order=active_filters.order) }}" class="btn-page">
+                        Next <span class="material-symbols-outlined">chevron_right</span>
+                    </a>
+                    {% else %}
+                    <span class="btn-page disabled">
+                        Next <span class="material-symbols-outlined">chevron_right</span>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% elif total_count > 0 %}
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing {{ start_idx }}–{{ end_idx }} of {{ total_count }} expenses
+                </div>
+            </div>
+            {% endif %}
             {% endif %}
             {% endif %}
         </div>

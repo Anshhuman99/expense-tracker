@@ -193,6 +193,35 @@ def get_categories(user_id, path=None):
         conn.close()
 
 
+def _build_filter_clause(
+    user_id, category=None, start_date=None, end_date=None, search_query=None
+):
+    """
+    Construct dynamic filter criteria query clause and binding parameters.
+    """
+    query_parts = ["user_id = ?"]
+    params = [user_id]
+
+    if category:
+        query_parts.append("category = ?")
+        params.append(category)
+
+    if start_date:
+        query_parts.append("date >= ?")
+        params.append(start_date)
+
+    if end_date:
+        query_parts.append("date <= ?")
+        params.append(end_date)
+
+    if search_query:
+        query_parts.append("(description LIKE ? OR category LIKE ?)")
+        search_param = f"%{search_query}%"
+        params.extend([search_param, search_param])
+
+    return " AND ".join(query_parts), params
+
+
 def get_filtered_expenses(
     user_id,
     category=None,
@@ -202,43 +231,55 @@ def get_filtered_expenses(
     sort_by="date",
     order="DESC",
     limit=None,
+    offset=None,
     path=None,
 ):
     """
     Retrieve expenses for a specific user filtered by category, date range, and search text.
     """
     sort_col, sort_order = _get_sort_clause(sort_by, order)
+    where_clause, params = _build_filter_clause(
+        user_id, category, start_date, end_date, search_query
+    )
 
     conn = get_db(path)
     try:
-        query = "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ?"
-        params = [user_id]
-
-        if category:
-            query += " AND category = ?"
-            params.append(category)
-
-        if start_date:
-            query += " AND date >= ?"
-            params.append(start_date)
-
-        if end_date:
-            query += " AND date <= ?"
-            params.append(end_date)
-
-        if search_query:
-            query += " AND (description LIKE ? OR category LIKE ?)"
-            search_param = f"%{search_query}%"
-            params.extend([search_param, search_param])
-
+        query = f"SELECT id, amount, category, date, description FROM expenses WHERE {where_clause}"
         query += f" ORDER BY {sort_col} {sort_order}, id DESC"
 
-        if limit:
+        if limit is not None:
             query += " LIMIT ?"
             params.append(limit)
+            if offset is not None:
+                query += " OFFSET ?"
+                params.append(offset)
 
         rows = conn.execute(query, params).fetchall()
         return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_filtered_expenses_count(
+    user_id,
+    category=None,
+    start_date=None,
+    end_date=None,
+    search_query=None,
+    path=None,
+):
+    """
+    Retrieve count of expenses matching active filters for a specific user.
+    """
+    where_clause, params = _build_filter_clause(
+        user_id, category, start_date, end_date, search_query
+    )
+
+    conn = get_db(path)
+    try:
+        query = f"SELECT COUNT(*) FROM expenses WHERE {where_clause}"
+        row = conn.execute(query, params).fetchone()
+        return row[0] if row else 0
     finally:
         conn.close()
 
