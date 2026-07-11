@@ -28,6 +28,7 @@ from database.queries import (
     get_category_breakdown,
     get_categories,
     get_filtered_expenses,
+    get_filtered_expenses_count,
     get_expense_by_id,
     create_budget,
     get_budget_by_id,
@@ -56,6 +57,7 @@ ALLOWED_CATEGORIES = [
     "Shopping",
     "Other",
 ]
+EXPENSES_PER_PAGE = 10
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -418,22 +420,44 @@ def profile():
         for item in db_breakdown
     ]
 
-    # Retrieve real expenses (filtered up to 100 vs default 10 recent)
-    if is_filtered:
-        recent_expenses = get_filtered_expenses(
-            user_id=user_id,
-            category=category,
-            start_date=start_date,
-            end_date=end_date,
-            search_query=search_query,
-            sort_by=sort_by,
-            order=order,
-            limit=100,
-        )
-    else:
-        recent_expenses = get_recent_transactions(
-            user_id, limit=10, sort_by=sort_by, order=order
-        )
+    # Retrieve real expenses (paginated, 10 per page)
+    total_count = get_filtered_expenses_count(
+        user_id=user_id,
+        category=category,
+        start_date=start_date,
+        end_date=end_date,
+        search_query=search_query,
+    )
+
+    per_page = EXPENSES_PER_PAGE
+    total_pages = max(1, math.ceil(total_count / per_page))
+
+    try:
+        page = int(request.args.get("page", 1))
+    except (ValueError, TypeError):
+        page = 1
+
+    if page < 1:
+        page = 1
+    elif page > total_pages:
+        page = total_pages
+
+    offset = (page - 1) * per_page
+
+    recent_expenses = get_filtered_expenses(
+        user_id=user_id,
+        category=category,
+        start_date=start_date,
+        end_date=end_date,
+        search_query=search_query,
+        sort_by=sort_by,
+        order=order,
+        limit=per_page,
+        offset=offset,
+    )
+
+    start_idx = (page - 1) * per_page + 1 if total_count > 0 else 0
+    end_idx = min(page * per_page, total_count)
 
     return render_template(
         "profile.html",
@@ -444,6 +468,11 @@ def profile():
         categories=categories,
         active_filters=active_filters,
         is_filtered=is_filtered,
+        page=page,
+        total_pages=total_pages,
+        total_count=total_count,
+        start_idx=start_idx,
+        end_idx=end_idx,
     )
 
 
