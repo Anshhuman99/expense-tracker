@@ -60,6 +60,10 @@
                 <form method="GET" action="{{ url_for('profile') }}" class="filters-form">
 
                     <div class="filter-group">
+                        <label for="search_query">Search</label>
+                        <input type="text" id="search_query" name="search_query" placeholder="Search by description or category..." value="{{ active_filters.search_query or '' }}">
+                    </div>
+                    <div class="filter-group">
                         <label for="category">Category</label>
                         <select id="category" name="category">
                             <option value="">All Categories</option>
