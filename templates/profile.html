@@ -40,9 +40,14 @@
         <div class="dashboard-main card">
             <div class="card-header">
                 <h2>{% if is_filtered %}Filtered Expenses{% else %}Recent Expenses{% endif %}</h2>
-                {% if stats.total_count > 0 %}
-                <a href="{{ url_for('add_expense') }}" class="btn-secondary btn-cta">Add Expense</a>
-                {% endif %}
+                <div class="card-actions">
+                    {% if total_count > 0 %}
+                    <a href="{{ url_for('export_csv', category=active_filters.category, start_date=active_filters.start_date, end_date=active_filters.end_date, search_query=active_filters.search_query, sort_by=active_filters.sort_by, order=active_filters.order) }}" class="btn-secondary btn-export">Export CSV</a>
+                    {% endif %}
+                    {% if stats.total_count > 0 %}
+                    <a href="{{ url_for('add_expense') }}" class="btn-secondary btn-cta">Add Expense</a>
+                    {% endif %}
+                </div>
             </div>
             
             {% if stats.total_count == 0 %}
