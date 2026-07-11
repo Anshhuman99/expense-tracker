@@ -48,7 +48,10 @@ import datetime
 import math
 import calendar
 import csv
-from io import StringIO
+from io import StringIO, BytesIO
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.utils import get_column_letter
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 ALLOWED_CATEGORIES = [
@@ -95,6 +98,52 @@ def _sanitize_csv_value(val):
     if str_val and str_val[0] in ("=", "+", "-", "@"):
         return f"'{str_val}"
     return str_val
+
+
+# Brand colour used in exported Excel header rows (matches --color-primary in CSS)
+EXCEL_HEADER_COLOR = "2D6A4F"
+
+
+def _build_expense_workbook(expenses):
+    """
+    Build and return an openpyxl Workbook for the given expenses list.
+    Produces a styled header row, data rows with numeric amounts, and
+    approximate column widths. Sanitises text cells to prevent formula
+    injection when the workbook is opened in spreadsheet software.
+    """
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Expenses"
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill(
+        start_color=EXCEL_HEADER_COLOR,
+        end_color=EXCEL_HEADER_COLOR,
+        fill_type="solid",
+    )
+    header_alignment = Alignment(horizontal="center", vertical="center")
+
+    headers = ["Date", "Category", "Description", "Amount"]
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_alignment
+
+    for row_idx, exp in enumerate(expenses, start=2):
+        ws.cell(row=row_idx, column=1, value=exp["date"])
+        ws.cell(row=row_idx, column=2, value=_sanitize_csv_value(exp["category"]))
+        ws.cell(row=row_idx, column=3, value=_sanitize_csv_value(exp["description"]))
+        amount_cell = ws.cell(
+            row=row_idx, column=4, value=round(float(exp["amount"]), 2)
+        )
+        amount_cell.number_format = "#,##0.00"
+
+    col_widths = [12, 14, 40, 12]
+    for col_idx, width in enumerate(col_widths, start=1):
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+
+    return wb
 
 
 app = Flask(__name__)
@@ -833,7 +882,34 @@ def export_csv():
     filename = f"spendly_expenses_{timestamp}.csv"
 
     response = Response(csv_buffer.getvalue(), mimetype="text/csv")
-    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
+
+
+@app.route("/expenses/export/excel")
+def export_excel():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    active_filters = _get_filter_params()
+    expenses = get_filtered_expenses(
+        user_id=user_id, limit=None, offset=None, **active_filters
+    )
+
+    wb = _build_expense_workbook(expenses)
+    excel_buffer = BytesIO()
+    wb.save(excel_buffer)
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"spendly_expenses_{timestamp}.xlsx"
+
+    response = Response(
+        excel_buffer.getvalue(),
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
 
 
