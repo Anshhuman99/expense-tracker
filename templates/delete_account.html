@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Delete Account — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/delete_account.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="delete-container">
+
+    <div class="delete-card">
+        <div class="delete-card-header">
+            <span class="material-symbols-outlined warning-header-icon">warning</span>
+            <h1 class="delete-title">Permanently Delete Account</h1>
+        </div>
+
+        <div class="delete-card-body">
+            <div class="warning-box">
+                <h2 class="warning-title">Important Notice</h2>
+                <p>This action is irreversible. Once you confirm, the following will happen:</p>
+                <ul class="warning-list">
+                    <li>All your registered profile data will be erased.</li>
+                    <li>All logged expenses and categories will be permanently deleted.</li>
+                    <li>All monthly budgets you have set up will be removed.</li>
+                    <li>You will be immediately signed out and lose access to this account.</li>
+                </ul>
+            </div>
+
+            <form
+                id="form-delete-account"
+                method="POST"
+                action="{{ url_for('delete_account') }}"
+                novalidate
+            >
+                <div class="form-group">
+                    <label for="password" class="form-label">Verify Password to Confirm</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="Enter your current password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <a href="{{ url_for('settings') }}" class="btn btn-secondary">
+                        <span class="material-symbols-outlined btn-icon">arrow_back</span>
+                        Cancel, Go Back
+                    </a>
+                    <button type="submit" id="btn-confirm-delete" class="btn btn-danger">
+                        <span class="material-symbols-outlined btn-icon">delete_forever</span>
+                        Permanently Delete Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
