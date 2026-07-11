@@ -141,6 +141,196 @@ def login():
     return render_template("login.html")
 
 
+@app.route("/demo")
+def demo_login():
+    import random
+    from werkzeug.security import generate_password_hash
+
+    email = "demo@spendly.com"
+    conn = get_db()
+    try:
+        user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+        if not user:
+            # Create user if not exists
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
+                ("Demo User", email, generate_password_hash("demo123")),
+            )
+            conn.commit()
+            user = conn.execute(
+                "SELECT * FROM users WHERE email = ?", (email,)
+            ).fetchone()
+
+        user_id = user["id"]
+
+        # Clear existing expenses and budgets to avoid infinite growth and keep it clean
+        conn.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
+        conn.execute("DELETE FROM budgets WHERE user_id = ?", (user_id,))
+
+        # Seeding parameters
+        num_expenses = 1200
+        today = datetime.date.today()
+
+        # Descriptions dictionary
+        desc_map = {
+            "Food": [
+                "Swiggy order",
+                "Zomato lunch",
+                "Grocery shopping",
+                "Chai and snacks",
+                "Dinner with friends",
+                "Cafe coffee",
+                "Breakfast at Udipi",
+                "Fruit market",
+            ],
+            "Transport": [
+                "Uber ride",
+                "Ola cab",
+                "Metro recharge",
+                "Auto fare",
+                "Petrol refill",
+                "Train ticket",
+            ],
+            "Bills": [
+                "Electricity bill",
+                "Broadband internet",
+                "Mobile recharge",
+                "Water bill",
+                "Gas cylinder refill",
+                "Rent payment",
+                "DTH subscription",
+            ],
+            "Shopping": [
+                "Amazon purchase",
+                "Myntra clothes",
+                "Shoes from Nike",
+                "Supermarket run",
+                "Electronics item",
+                "Bookstore purchase",
+            ],
+            "Entertainment": [
+                "Netflix subscription",
+                "Spotify Premium",
+                "Movie ticket",
+                "Weekend concert",
+                "Gaming arcade",
+                "Bowling",
+                "Theme park ticket",
+            ],
+            "Health": [
+                "Pharmacy medicines",
+                "Doctor consultation",
+                "Lab test",
+                "Health checkup",
+                "Gym membership",
+                "Eye exam",
+            ],
+            "Other": [
+                "Courier charges",
+                "Laundry",
+                "Gift for colleague",
+                "Miscellaneous cash spending",
+                "Photocopy charges",
+            ],
+        }
+
+        categories_weight = [
+            "Food",
+            "Transport",
+            "Bills",
+            "Shopping",
+            "Entertainment",
+            "Health",
+            "Other",
+        ]
+        # Probability weights for each category
+        weights = [0.35, 0.20, 0.10, 0.15, 0.10, 0.05, 0.05]
+
+        expense_records = []
+        for _ in range(num_expenses):
+            category = random.choices(categories_weight, weights=weights, k=1)[0]
+
+            # Select amount range based on category
+            if category == "Food":
+                amount = round(random.uniform(50, 800), 2)
+            elif category == "Transport":
+                amount = round(random.uniform(20, 500), 2)
+            elif category == "Bills":
+                amount = round(random.uniform(200, 3000), 2)
+            elif category == "Shopping":
+                amount = round(random.uniform(200, 5000), 2)
+            elif category == "Entertainment":
+                amount = round(random.uniform(100, 1500), 2)
+            elif category == "Health":
+                amount = round(random.uniform(100, 2000), 2)
+            else:  # Other
+                amount = round(random.uniform(50, 1000), 2)
+
+            # Random date in the past 180 days (6 months)
+            days_ago = random.randint(0, 180)
+            expense_date = (today - datetime.timedelta(days=days_ago)).strftime(
+                "%Y-%m-%d"
+            )
+
+            description = random.choice(desc_map[category])
+            expense_records.append(
+                (user_id, amount, category, expense_date, description)
+            )
+
+        # Insert all in one batch transaction
+        conn.executemany(
+            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
+            expense_records,
+        )
+
+        # Let's seed budgets for the past 6 months + current month.
+        # Get list of unique YYYY-MM values in the date range
+        months_to_seed = set()
+        for i in range(185):
+            m_str = (today - datetime.timedelta(days=i)).strftime("%Y-%m")
+            months_to_seed.add(m_str)
+
+        budget_records = []
+        # Category budgets
+        cat_budgets = {
+            "Food": 15000.0,
+            "Transport": 5000.0,
+            "Bills": 12000.0,
+            "Shopping": 10000.0,
+            "Entertainment": 6000.0,
+            "Health": 4000.0,
+            "Other": 3000.0,
+        }
+        for month in months_to_seed:
+            for cat, amt in cat_budgets.items():
+                budget_records.append((user_id, cat, amt, month))
+
+        conn.executemany(
+            "INSERT INTO budgets (user_id, category, amount, month) VALUES (?, ?, ?, ?)",
+            budget_records,
+        )
+
+        conn.commit()
+
+        # Log in
+        session.clear()
+        session["user_id"] = user["id"]
+        session["user_name"] = user["name"]
+        flash(
+            "Logged into Demo Account with a pre-populated dataset of past 6 months (1200 expenses)!",
+            "success",
+        )
+        return redirect(url_for("profile"))
+
+    except Exception as e:
+        conn.rollback()
+        flash(f"Error initializing demo account: {str(e)}", "error")
+        return redirect(url_for("landing"))
+    finally:
+        conn.close()
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
