@@ -10,6 +10,7 @@ from flask import (
     get_flashed_messages,
     abort,
 )
+import json
 from database.db import (
     get_db,
     init_db,
@@ -34,6 +35,8 @@ from database.queries import (
     update_budget,
     delete_budget as db_delete_budget,
     get_month_category_spending,
+    get_monthly_spending_trend,
+    get_category_spending_breakdown,
 )
 from werkzeug.security import check_password_hash
 import sqlite3
@@ -246,7 +249,94 @@ def analytics():
     if not user_id:
         flash("Please log in to access this page.", "error")
         return redirect(url_for("login"))
-    return render_template("analytics.html")
+
+    # Parse filter parameters
+    category = request.args.get("category", "").strip()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
+
+    # Validate date formats if provided
+    if start_date:
+        try:
+            datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid start date format. Expected YYYY-MM-DD.", "error")
+            start_date = ""
+    if end_date:
+        try:
+            datetime.datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid end date format. Expected YYYY-MM-DD.", "error")
+            end_date = ""
+
+    active_filters = {
+        "category": category,
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+    is_filtered = any([category, start_date, end_date])
+
+    # Categories for dropdown
+    categories = get_categories(user_id)
+
+    # Fetch filtered expenses to check if overall data exists (empty states)
+    filtered_expenses = get_filtered_expenses(
+        user_id=user_id,
+        category=category,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    # Use the helper function to query aggregated category totals
+    breakdown_data = get_category_spending_breakdown(
+        user_id=user_id,
+        category=category if category else None,
+        start_date=start_date if start_date else None,
+        end_date=end_date if end_date else None,
+    )
+
+    # Monthly spending trend
+    trend_data = get_monthly_spending_trend(
+        user_id=user_id,
+        category=category if category else None,
+        start_date=start_date if start_date else None,
+        end_date=end_date if end_date else None,
+    )
+
+    # Budget vs actual: use start_date month or current month
+    if start_date:
+        try:
+            budget_month = datetime.datetime.strptime(start_date, "%Y-%m-%d").strftime(
+                "%Y-%m"
+            )
+        except ValueError:
+            budget_month = datetime.date.today().strftime("%Y-%m")
+    else:
+        budget_month = datetime.date.today().strftime("%Y-%m")
+
+    budgets_for_month = get_budgets_for_month(user_id, budget_month)
+    actual_spending = get_month_category_spending(user_id, budget_month)
+    budget_comparison = [
+        {
+            "category": b["category"],
+            "budget": round(b["amount"], 2),
+            "actual": actual_spending.get(b["category"], 0.0),
+        }
+        for b in budgets_for_month
+    ]
+
+    return render_template(
+        "analytics.html",
+        categories=categories,
+        active_filters=active_filters,
+        is_filtered=is_filtered,
+        has_data=len(filtered_expenses) > 0,
+        breakdown_data=breakdown_data,
+        trend_data=trend_data,
+        budget_comparison=budget_comparison,
+        has_budgets=len(budgets_for_month) > 0,
+        budget_month=budget_month,
+    )
 
 
 @app.route("/expenses/add", methods=["GET", "POST"])

@@ -352,3 +352,69 @@ def get_month_category_spending(user_id, month, path=None):
         return {row["category"]: round(row["total"], 2) for row in rows}
     finally:
         conn.close()
+
+
+def get_monthly_spending_trend(
+    user_id, category=None, start_date=None, end_date=None, path=None
+):
+    """
+    Returns monthly spending trend for a user as a list of dicts:
+    [{'month': 'YYYY-MM', 'total': 123.45}, ...]
+    Optionally filtered by category, start_date, and end_date.
+    Results are ordered chronologically (oldest first).
+    """
+    conn = get_db(path)
+    try:
+        query = (
+            "SELECT strftime('%Y-%m', date) AS month, SUM(amount) AS total "
+            "FROM expenses WHERE user_id = ?"
+        )
+        params = [user_id]
+
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+
+        query += " GROUP BY month ORDER BY month ASC"
+        rows = conn.execute(query, params).fetchall()
+        return [
+            {"month": row["month"], "total": round(row["total"], 2)} for row in rows
+        ]
+    finally:
+        conn.close()
+
+
+def get_category_spending_breakdown(
+    user_id, category=None, start_date=None, end_date=None, path=None
+):
+    """
+    Aggregates category totals for a user under given filters.
+    Returns a list of dicts: [{'category': cat, 'amount': amt}, ...] sorted by amount DESC.
+    """
+    conn = get_db(path)
+    try:
+        query = "SELECT category, SUM(amount) AS amount FROM expenses WHERE user_id = ?"
+        params = [user_id]
+        if category:
+            query += " AND category = ?"
+            params.append(category)
+        if start_date:
+            query += " AND date >= ?"
+            params.append(start_date)
+        if end_date:
+            query += " AND date <= ?"
+            params.append(end_date)
+        query += " GROUP BY category ORDER BY amount DESC"
+        rows = conn.execute(query, params).fetchall()
+        return [
+            {"category": row["category"], "amount": round(row["amount"], 2)}
+            for row in rows
+        ]
+    finally:
+        conn.close()
