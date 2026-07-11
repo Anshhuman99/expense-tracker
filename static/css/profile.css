@@ -223,7 +223,7 @@
 
 .filters-form {
     display: grid;
-    grid-template-columns: 2fr 1.5fr 1.25fr 1.25fr auto;
+    grid-template-columns: 2fr 1.5fr 1.25fr 1.25fr 1.25fr 1.25fr auto;
     gap: 1rem;
     align-items: flex-end;
 }

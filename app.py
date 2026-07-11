@@ -374,12 +374,16 @@ def profile():
     end_date = request.args.get("end_date", "").strip()
     raw_search = request.args.get("search_query") or request.args.get("q") or ""
     search_query = raw_search.strip()[:100]
+    sort_by = request.args.get("sort_by", "date").strip()
+    order = request.args.get("order", "DESC").strip()
 
     active_filters = {
         "category": category,
         "start_date": start_date,
         "end_date": end_date,
         "search_query": search_query,
+        "sort_by": sort_by,
+        "order": order,
     }
 
     is_filtered = any([category, start_date, end_date, search_query])
@@ -422,10 +426,14 @@ def profile():
             start_date=start_date,
             end_date=end_date,
             search_query=search_query,
+            sort_by=sort_by,
+            order=order,
             limit=100,
         )
     else:
-        recent_expenses = get_recent_transactions(user_id, limit=10)
+        recent_expenses = get_recent_transactions(
+            user_id, limit=10, sort_by=sort_by, order=order
+        )
 
     return render_template(
         "profile.html",

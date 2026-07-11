@@ -80,6 +80,21 @@
                         <label for="end_date">To</label>
                         <input type="date" id="end_date" name="end_date" value="{{ active_filters.end_date or '' }}">
                     </div>
+                    <div class="filter-group">
+                        <label for="sort_by">Sort By</label>
+                        <select id="sort_by" name="sort_by">
+                            <option value="date" {% if active_filters.sort_by == 'date' %}selected{% endif %}>Date</option>
+                            <option value="amount" {% if active_filters.sort_by == 'amount' %}selected{% endif %}>Amount</option>
+                            <option value="category" {% if active_filters.sort_by == 'category' %}selected{% endif %}>Category</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="order">Direction</label>
+                        <select id="order" name="order">
+                            <option value="DESC" {% if active_filters.order == 'DESC' %}selected{% endif %}>Descending</option>
+                            <option value="ASC" {% if active_filters.order == 'ASC' %}selected{% endif %}>Ascending</option>
+                        </select>
+                    </div>
                     <div class="filter-actions">
                         <button type="submit" class="btn-primary btn-filter">Filter</button>
                         {% if is_filtered %}
