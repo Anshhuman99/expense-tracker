@@ -418,3 +418,19 @@ def get_category_spending_breakdown(
         ]
     finally:
         conn.close()
+
+
+def get_highest_expense(user_id, path=None):
+    """
+    Retrieve the single highest expense for a user.
+    Returns a dict or None.
+    """
+    conn = get_db(path)
+    try:
+        row = conn.execute(
+            "SELECT id, amount, category, date, description FROM expenses WHERE user_id = ? ORDER BY amount DESC, date DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
