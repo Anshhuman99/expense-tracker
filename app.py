@@ -9,6 +9,7 @@ from flask import (
     g,
     get_flashed_messages,
     abort,
+    Response,
 )
 import json
 from database.db import (
@@ -46,6 +47,8 @@ import re
 import datetime
 import math
 import calendar
+import csv
+from io import StringIO
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 ALLOWED_CATEGORIES = [
@@ -58,6 +61,41 @@ ALLOWED_CATEGORIES = [
     "Other",
 ]
 EXPENSES_PER_PAGE = 10
+
+
+def _get_filter_params():
+    """
+    Parse filter parameters from request query arguments.
+    """
+    category = request.args.get("category", "").strip()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
+    raw_search = request.args.get("search_query") or request.args.get("q") or ""
+    search_query = raw_search.strip()[:100]
+    sort_by = request.args.get("sort_by", "date").strip()
+    order = request.args.get("order", "DESC").strip()
+    return {
+        "category": category,
+        "start_date": start_date,
+        "end_date": end_date,
+        "search_query": search_query,
+        "sort_by": sort_by,
+        "order": order,
+    }
+
+
+def _sanitize_csv_value(val):
+    """
+    Sanitize values to prevent CSV injection (Formula Injection).
+    If a string value starts with =, +, -, or @, prepend a single quote '.
+    """
+    if not val:
+        return ""
+    str_val = str(val)
+    if str_val and str_val[0] in ("=", "+", "-", "@"):
+        return f"'{str_val}"
+    return str_val
+
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
@@ -371,22 +409,13 @@ def profile():
         return redirect(url_for("login"))
 
     # Get active filters from URL query parameters
-    category = request.args.get("category", "").strip()
-    start_date = request.args.get("start_date", "").strip()
-    end_date = request.args.get("end_date", "").strip()
-    raw_search = request.args.get("search_query") or request.args.get("q") or ""
-    search_query = raw_search.strip()[:100]
-    sort_by = request.args.get("sort_by", "date").strip()
-    order = request.args.get("order", "DESC").strip()
-
-    active_filters = {
-        "category": category,
-        "start_date": start_date,
-        "end_date": end_date,
-        "search_query": search_query,
-        "sort_by": sort_by,
-        "order": order,
-    }
+    active_filters = _get_filter_params()
+    category = active_filters["category"]
+    start_date = active_filters["start_date"]
+    end_date = active_filters["end_date"]
+    search_query = active_filters["search_query"]
+    sort_by = active_filters["sort_by"]
+    order = active_filters["order"]
 
     is_filtered = any([category, start_date, end_date, search_query])
 
@@ -757,6 +786,55 @@ def insights():
         insights_list=insights_list,
         highest_expense=highest_expense,
     )
+
+
+@app.route("/expenses/export/csv")
+def export_csv():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    active_filters = _get_filter_params()
+    category = active_filters["category"]
+    start_date = active_filters["start_date"]
+    end_date = active_filters["end_date"]
+    search_query = active_filters["search_query"]
+    sort_by = active_filters["sort_by"]
+    order = active_filters["order"]
+
+    expenses = get_filtered_expenses(
+        user_id=user_id,
+        category=category,
+        start_date=start_date,
+        end_date=end_date,
+        search_query=search_query,
+        sort_by=sort_by,
+        order=order,
+        limit=None,
+        offset=None,
+    )
+
+    csv_buffer = StringIO()
+    csv_writer = csv.writer(csv_buffer)
+    csv_writer.writerow(["Date", "Category", "Description", "Amount"])
+
+    for exp in expenses:
+        csv_writer.writerow(
+            [
+                exp["date"],
+                _sanitize_csv_value(exp["category"]),
+                _sanitize_csv_value(exp["description"]),
+                f"{exp['amount']:.2f}",
+            ]
+        )
+
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"spendly_expenses_{timestamp}.csv"
+
+    response = Response(csv_buffer.getvalue(), mimetype="text/csv")
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
 
 
 @app.route("/expenses/add", methods=["GET", "POST"])
