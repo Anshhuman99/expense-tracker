@@ -30,6 +30,7 @@
                     <a href="{{ url_for('budgets') }}" class="{% if request.endpoint in ['budgets', 'add_budget', 'edit_budget', 'delete_budget_route'] %}active{% endif %}">Budgets</a>
                     <a href="{{ url_for('recurring') }}" class="{% if request.endpoint in ['recurring', 'add_recurring'] %}active{% endif %}">Recurring</a>
                     <a href="{{ url_for('trends') }}" class="{% if request.endpoint == 'trends' %}active{% endif %}">Trends</a>
+                    <a href="{{ url_for('suggestions') }}" class="{% if request.endpoint == 'suggestions' %}active{% endif %}">Suggestions</a>
                     <a href="{{ url_for('analytics') }}" class="{% if request.endpoint == 'analytics' %}active{% endif %}">Analytics</a>
                     <a href="{{ url_for('insights') }}" class="{% if request.endpoint == 'insights' %}active{% endif %}">Insights</a>
                     <a href="{{ url_for('settings') }}" class="{% if request.endpoint in ['settings', 'settings_profile', 'settings_password'] %}active{% endif %}">Settings</a>

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Saving Suggestions - Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/suggestions.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="suggestions-container">
+    <div class="suggestions-header">
+        <h1 class="page-title">Personalized Saving Suggestions</h1>
+        <p class="page-subtitle">Simple, rule-based recommendations to help optimize your finances based on your actual spending.</p>
+    </div>
+
+    {% if not suggestions %}
+    <div class="card empty-card">
+        <div class="empty-state">
+            <span class="material-symbols-outlined empty-icon">check_circle</span>
+            <h2>You're in great shape!</h2>
+            <p>We didn't detect any warning triggers (like budget overruns, dining-out spikes, or MoM category spending surges) for this month. Keep up the good work!</p>
+            {% if total_current == 0.0 %}
+            <p class="note">Note: Start logging expenses for this month to receive personalized recommendations.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="suggestions-list-wrapper">
+        {% for item in suggestions %}
+        <div class="suggestion-card item-type-{{ item.type }}">
+            <div class="suggestion-card-header">
+                <span class="impact-badge badge-{{ item.type }}">{{ item.impact }} Impact</span>
+                <span class="category-tag">{{ item.category }}</span>
+            </div>
+            <h3 class="suggestion-title">
+                {% if item.type == 'danger' %}
+                <span class="material-symbols-outlined icon-alert">report</span>
+                {% elif item.type == 'warning' %}
+                <span class="material-symbols-outlined icon-alert">warning</span>
+                {% else %}
+                <span class="material-symbols-outlined icon-alert">lightbulb</span>
+                {% endif %}
+                {{ item.title }}
+            </h3>
+            <p class="suggestion-desc">{{ item.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
