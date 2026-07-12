@@ -6,6 +6,16 @@ The project prioritises clean architecture, readability, maintainability, and co
 
 ---
 
+## 📱 Previews
+
+### Light Mode Dashboard
+![Spendly Light Mode Dashboard](static/images/spendly_dashboard_light.jpg)
+
+### Dark Mode Dashboard
+![Spendly Dark Mode Dashboard](static/images/spendly_dashboard_dark.jpg)
+
+---
+
 ## 🌟 Key Features
 
 ### 1. Dashboard & Transactions
