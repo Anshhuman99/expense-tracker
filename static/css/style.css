@@ -3,55 +3,55 @@
 /* ------------------------------------------------------------------ */
 
 :root {
-    --ink: #0f0f0f;
-    --ink-soft: #2d2d2d;
-    --ink-muted: #6b6b6b;
-    --ink-faint: #a0a0a0;
-    --paper: #f7f6f3;
-    --paper-warm: #f0ede6;
+    --ink: #111827;
+    --ink-soft: #191c1e;
+    --ink-muted: #6B7280;
+    --ink-faint: #707a6f;
+    --paper: #f7f9fb;
+    --paper-warm: #eceef0;
     --paper-card: #ffffff;
-    --accent: #1a472a;
-    --accent-light: #e8f0eb;
-    --accent-2: #c17f24;
-    --accent-2-light: #fdf3e3;
-    --danger: #c0392b;
-    --danger-light: #fdecea;
-    --border: #e4e1da;
-    --border-soft: #eeebe4;
+    --accent: #166534;
+    --accent-light: #93e0a2;
+    --accent-2: #006e2f;
+    --accent-2-light: #6bff8f;
+    --danger: #EF4444;
+    --danger-light: #ffdad6;
+    --border: #E5E7EB;
+    --border-soft: #F1F5F9;
 
     /* Semantic colours */
-    --success: #16a34a;
-    --success-light: #d5f0e8;
-    --success-border: #c2dfce;
-    --danger-border: #f5c6c2;
+    --success: #22C55E;
+    --success-light: #e6fcf0;
+    --success-border: #bfc9bd;
+    --danger-border: #ffdad6;
 
     /* Chart colours */
-    --chart-1: #f59e0b;
-    --chart-2: #c17f24;
-    --chart-3: #5b7fa6;
-    --chart-4: #8b5e83;
+    --chart-1: #166534;
+    --chart-2: #22C55E;
+    --chart-3: #F59E0B;
+    --chart-4: #EF4444;
 
     /* Shadow */
-    --shadow-color: rgba(0, 0, 0, 0.06);
-    --shadow-heavy: rgba(0, 0, 0, 0.3);
+    --shadow-color: rgba(0, 0, 0, 0.04);
+    --shadow-heavy: rgba(0, 0, 0, 0.15);
 
-    --font-display: 'DM Serif Display', Georgia, serif;
-    --font-body: 'DM Sans', system-ui, sans-serif;
+    --font-display: 'Inter', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
 
-    --max-width: 1200px;
+    --max-width: 1400px;
     --auth-width: 440px;
 
-    --radius-sm: 6px;
-    --radius-md: 12px;
-    --radius-lg: 20px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
 
     /* Budget status colours */
-    --budget-ok: #16a34a;
-    --budget-ok-light: #dcfce7;
-    --budget-warning: #d97706;
+    --budget-ok: #22C55E;
+    --budget-ok-light: #e6fcf0;
+    --budget-warning: #F59E0B;
     --budget-warning-light: #fef3c7;
-    --budget-exceeded: #dc2626;
-    --budget-exceeded-light: #fee2e2;
+    --budget-exceeded: #EF4444;
+    --budget-exceeded-light: #ffdad6;
 
     /* Category badge colours */
     --badge-food-bg: #fef3c7;
@@ -70,46 +70,53 @@
     --badge-other-color: #4b5563;
 }
 
+.brand-logo-img {
+    height: 24px;
+    width: 24px;
+    object-fit: contain;
+    border-radius: 6px;
+}
+
 /* ------------------------------------------------------------------ */
 /* Dark Theme                                                          */
 /* ------------------------------------------------------------------ */
 
 [data-theme="dark"] {
-    --ink: #e8e6e1;
-    --ink-soft: #c8c5be;
-    --ink-muted: #9a978f;
-    --ink-faint: #6b6862;
-    --paper: #1a1a1a;
-    --paper-warm: #222222;
-    --paper-card: #2a2a2a;
-    --accent: #4ade80;
-    --accent-light: #1a3328;
-    --accent-2: #f0a946;
-    --accent-2-light: #3d2e14;
-    --danger: #f87171;
-    --danger-light: #3b1c1c;
-    --border: #3a3a3a;
-    --border-soft: #333333;
+    --ink: #eceef0;
+    --ink-soft: #d8dadc;
+    --ink-muted: #bfc9bd;
+    --ink-faint: #707a6f;
+    --paper: #121413;
+    --paper-warm: #191c1e;
+    --paper-card: #1c1e1d;
+    --accent: #22C55E;
+    --accent-light: #166534;
+    --accent-2: #006e2f;
+    --accent-2-light: #6bff8f;
+    --danger: #EF4444;
+    --danger-light: #ffdad6;
+    --border: #404940;
+    --border-soft: #2d3133;
 
-    --success: #4ade80;
-    --success-light: #1a3328;
-    --success-border: #2a5a3e;
-    --danger-border: #5a2a2a;
+    --success: #22C55E;
+    --success-light: #166534;
+    --success-border: #bfc9bd;
+    --danger-border: #ffdad6;
 
-    --chart-1: #fbbf24;
-    --chart-2: #f0a946;
-    --chart-3: #7da8cc;
-    --chart-4: #b08aa8;
+    --chart-1: #166534;
+    --chart-2: #22C55E;
+    --chart-3: #F59E0B;
+    --chart-4: #EF4444;
 
     --shadow-color: rgba(0, 0, 0, 0.2);
     --shadow-heavy: rgba(0, 0, 0, 0.5);
 
-    --budget-ok: #4ade80;
-    --budget-ok-light: #1a3328;
-    --budget-warning: #fbbf24;
-    --budget-warning-light: #3d2e14;
-    --budget-exceeded: #f87171;
-    --budget-exceeded-light: #3b1c1c;
+    --budget-ok: #22C55E;
+    --budget-ok-light: #166534;
+    --budget-warning: #F59E0B;
+    --budget-warning-light: #7d4e00;
+    --budget-exceeded: #EF4444;
+    --budget-exceeded-light: #ffdad6;
 
     /* Category badge colours */
     --badge-food-bg: #3d2e14;
@@ -237,9 +244,74 @@ a { color: inherit; text-decoration: none; }
 
 .nav-cta:hover { background: var(--accent) !important; }
 
-/* ------------------------------------------------------------------ */
-/* Main                                                                */
-/* ------------------------------------------------------------------ */
+@media (min-width: 768px) {
+    .navbar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        width: 260px;
+        background: var(--paper-card);
+        border-right: 1px solid var(--border);
+        border-bottom: none;
+        padding: 2.5rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+    }
+    .nav-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        height: 100%;
+        width: 100%;
+        gap: 3rem;
+    }
+    .nav-right {
+        order: 3;
+        margin-top: auto;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .nav-links {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    .nav-links a {
+        display: block;
+        width: 100%;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .nav-links a:hover {
+        background: var(--border-soft);
+        color: var(--ink);
+    }
+    .nav-links a.active {
+        background: var(--border-soft) !important;
+        color: var(--accent) !important;
+        font-weight: 700;
+    }
+    .nav-user {
+        display: block;
+        width: 100%;
+        padding: 0 1rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--ink);
+    }
+    .main-content {
+        margin-left: 260px;
+        padding: 3rem 4rem;
+        min-height: calc(100vh - 100px);
+    }
+    .footer {
+        margin-left: 260px;
+    }
+}
 
 .main-content { min-height: calc(100vh - 60px - 100px); }
 

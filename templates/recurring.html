@@ -35,7 +35,7 @@
                 <span class="category-badge category-{{ rule.category.lower() }}">{{ rule.category }}</span>
                 <span class="rule-frequency">{{ rule.frequency.capitalize() }}</span>
             </div>
-            <div class="rule-amount">${{ "%.2f"|format(rule.amount) }}</div>
+            <div class="rule-amount">₹{{ "%.2f"|format(rule.amount) }}</div>
             {% if rule.description %}
             <div class="rule-desc">{{ rule.description }}</div>
             {% endif %}

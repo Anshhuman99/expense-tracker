@@ -216,8 +216,7 @@
 }
 
 .chart-canvas-wrapper--budget {
-    height: auto;
-    min-height: 200px;
+    height: 380px;
 }
 
 /* ── Budget no-data placeholder ───────────────────────────────────── */

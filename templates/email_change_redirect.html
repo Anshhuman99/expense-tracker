@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Email Change Request — Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <span class="material-symbols-outlined settings-header-icon">mail</span>
+        <div>
+            <h1 class="settings-title">Email Change Request</h1>
+            <p class="settings-subtitle">Redirecting to request your email change</p>
+        </div>
+    </div>
+
+    <section class="settings-card">
+        <div class="settings-card-header">
+            <span class="material-symbols-outlined card-header-icon">info</span>
+            <h2 class="settings-card-title">Automated Redirect</h2>
+        </div>
+        <div class="settings-card-body">
+            <p class="redirect-description">
+                Direct email updates are restricted. You are being redirected to Gmail to request this change.
+                A pre-filled email draft has been generated. Please send this request to our administrator at <strong>workforansh777@gmail.com</strong>.
+            </p>
+            
+            <div class="redirect-details">
+                <div class="redirect-details-item"><strong>Current Email:</strong> {{ current_email }}</div>
+                <div class="redirect-details-item"><strong>Requested Email:</strong> {{ new_email }}</div>
+            </div>
+
+            <p class="redirect-countdown">
+                Redirecting in <span id="countdown" class="redirect-countdown-number">5</span> seconds...
+            </p>
+
+            <div class="form-actions">
+                <a href="{{ url_for('settings') }}" class="btn btn-secondary" style="margin-right: auto;">Cancel</a>
+                <a href="{{ gmail_url }}" id="btn-gmail-redirect" class="btn btn-primary" target="_blank">
+                    <span class="material-symbols-outlined btn-icon">open_in_new</span>
+                    Open Gmail Compose
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let count = 5;
+        const countdownEl = document.getElementById("countdown");
+        const gmailUrl = "{{ gmail_url | safe }}";
+        
+        const timer = setInterval(() => {
+            count--;
+            countdownEl.textContent = count;
+            if (count <= 0) {
+                clearInterval(timer);
+                window.location.href = gmailUrl;
+            }
+        }, 1000);
+    });
+</script>
+{% endblock %}
