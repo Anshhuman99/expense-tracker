@@ -273,14 +273,14 @@
             </div>
 
             <!-- Savings suggestions Teaser -->
-            <div style="margin-top: 2rem; padding: 1rem; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
-                <h3 style="color: #166534; font-size: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+            <div class="suggestions-teaser">
+                <h3>
                     <span class="material-symbols-outlined" style="font-size: 1.25rem;">lightbulb</span> Saving Suggestions
                 </h3>
-                <p style="font-size: 0.85rem; color: #1e3a1e; margin-bottom: 1rem; line-height: 1.4;">
+                <p>
                     Get personalized suggestions to optimize your monthly spending habits.
                 </p>
-                <a href="{{ url_for('suggestions') }}" class="btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem; display: inline-block; background-color: #2d6a4f; color: white; border: none; border-radius: 4px; text-decoration: none;">View Suggestions</a>
+                <a href="{{ url_for('suggestions') }}" class="suggestions-teaser-btn">View Suggestions</a>
             </div>
         </div>
 

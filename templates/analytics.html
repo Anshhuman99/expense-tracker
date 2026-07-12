@@ -142,10 +142,10 @@
     const categoryPalette = [
         colorAccent,
         colorAccent2,
-        '#0369a1',  // transport blue
-        '#7e22ce',  // entertainment purple
-        '#a21caf',  // shopping pink
-        '#b45309',  // food amber
+        v('--badge-transport-color') || '#0369a1',
+        v('--badge-entertainment-color') || '#7e22ce',
+        v('--badge-shopping-color') || '#a21caf',
+        v('--badge-food-color') || '#b45309',
         colorInkMuted,
     ];
 

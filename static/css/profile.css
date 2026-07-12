@@ -193,13 +193,13 @@
     font-weight: 500;
 }
 
-.category-badge.food { background: #fef3c7; color: #b45309; }
-.category-badge.transport { background: #e0f2fe; color: #0369a1; }
-.category-badge.bills { background: #fee2e2; color: #b91c1c; }
-.category-badge.health { background: #dcfce7; color: #15803d; }
-.category-badge.entertainment { background: #f3e8ff; color: #7e22ce; }
-.category-badge.shopping { background: #fae8ff; color: #a21caf; }
-.category-badge.other { background: #f3f4f6; color: #4b5563; }
+.category-badge.food { background: var(--badge-food-bg); color: var(--badge-food-color); }
+.category-badge.transport { background: var(--badge-transport-bg); color: var(--badge-transport-color); }
+.category-badge.bills { background: var(--badge-bills-bg); color: var(--badge-bills-color); }
+.category-badge.health { background: var(--badge-health-bg); color: var(--badge-health-color); }
+.category-badge.entertainment { background: var(--badge-entertainment-bg); color: var(--badge-entertainment-color); }
+.category-badge.shopping { background: var(--badge-shopping-bg); color: var(--badge-shopping-color); }
+.category-badge.other { background: var(--badge-other-bg); color: var(--badge-other-color); }
 
 /* Progress Bars */
 .category-list {
@@ -244,9 +244,9 @@
 
 .progress-bar-1 { background: var(--accent); }
 .progress-bar-2 { background: var(--accent-2); }
-.progress-bar-3 { background: #0369a1; }
-.progress-bar-4 { background: #7e22ce; }
-.progress-bar-5 { background: #a21caf; }
+.progress-bar-3 { background: var(--chart-3); }
+.progress-bar-4 { background: var(--chart-4); }
+.progress-bar-5 { background: var(--ink-soft); }
 .progress-bar-default { background: var(--ink-muted); }
 
 .empty-state {
@@ -593,4 +593,44 @@
         justify-content: center;
     }
 }
+
+.suggestions-teaser {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    background-color: var(--accent-light);
+    border: 1px solid var(--success-border);
+    border-radius: var(--radius-md);
+    text-align: center;
+}
+.suggestions-teaser h3 {
+    color: var(--accent);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+.suggestions-teaser p {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 1rem;
+    line-height: 1.4;
+}
+.suggestions-teaser-btn {
+    font-size: 0.85rem;
+    padding: 0.5rem 1.25rem;
+    display: inline-block;
+    background-color: var(--accent);
+    color: var(--paper-card);
+    border: none;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.suggestions-teaser-btn:hover {
+    background-color: var(--ink);
+}
+
 

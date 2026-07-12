@@ -145,7 +145,7 @@
 
 .btn-danger {
     background: var(--danger);
-    color: #fff;
+    color: var(--paper);
 }
 
 .btn-danger:hover {

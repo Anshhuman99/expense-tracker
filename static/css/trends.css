@@ -1,17 +1,17 @@
 /* Trends stylesheet */
 
 :root {
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --color-green: #2d6a4f;
-    --color-green-light: #d1fae5;
-    --color-green-dark: #065f46;
-    --color-red: #ef4444;
-    --color-red-light: #fee2e2;
-    --color-red-dark: #991b1b;
+    --card-bg: var(--paper-card);
+    --card-border: var(--border);
+    --text-primary: var(--ink);
+    --text-secondary: var(--ink-soft);
+    --text-muted: var(--ink-muted);
+    --color-green: var(--accent);
+    --color-green-light: var(--accent-light);
+    --color-green-dark: var(--success);
+    --color-red: var(--danger);
+    --color-red-light: var(--danger-light);
+    --color-red-dark: var(--danger);
 }
 
 .trends-container {
@@ -210,14 +210,14 @@
     display: inline-block;
 }
 
-/* Category indicator colors mapping */
-.category-food { background-color: #ef4444; }
-.category-transport { background-color: #f59e0b; }
-.category-bills { background-color: #10b981; }
-.category-health { background-color: #0ea5e9; }
-.category-entertainment { background-color: #8b5cf6; }
-.category-shopping { background-color: #ec4899; }
-.category-other { background-color: #6b7280; }
+/* Category indicator colors mapping to theme variables */
+.category-food { background-color: var(--badge-food-color); }
+.category-transport { background-color: var(--badge-transport-color); }
+.category-bills { background-color: var(--badge-bills-color); }
+.category-health { background-color: var(--badge-health-color); }
+.category-entertainment { background-color: var(--badge-entertainment-color); }
+.category-shopping { background-color: var(--badge-shopping-color); }
+.category-other { background-color: var(--badge-other-color); }
 
 .diff-up {
     color: var(--color-red-dark);
@@ -249,6 +249,6 @@
 }
 
 .badge-neutral {
-    background-color: #f3f4f6;
-    color: #475569;
+    background-color: var(--border-soft);
+    color: var(--ink-soft);
 }

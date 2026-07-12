@@ -1,6 +1,47 @@
 // main.js — global JavaScript for Spendly features
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Theme toggle
+    const themeToggle = document.getElementById("theme-toggle");
+    const themeIcon = document.getElementById("theme-icon");
+
+    if (themeToggle && themeIcon) {
+        let currentTheme = "light";
+        try {
+            currentTheme = localStorage.getItem("spendly-theme");
+            if (!currentTheme) {
+                const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+                currentTheme = prefersDark ? "dark" : "light";
+            }
+        } catch (e) {
+            console.warn("Storage access not allowed:", e);
+        }
+
+        themeIcon.textContent = currentTheme === "dark" ? "light_mode" : "dark_mode";
+        themeToggle.setAttribute("aria-label", currentTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+        themeToggle.setAttribute("title", currentTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+
+        themeToggle.addEventListener("click", () => {
+            const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+            const nextTheme = isDark ? "light" : "dark";
+            if (nextTheme === "dark") {
+                document.documentElement.setAttribute("data-theme", "dark");
+            } else {
+                document.documentElement.removeAttribute("data-theme");
+            }
+            
+            try {
+                localStorage.setItem("spendly-theme", nextTheme);
+            } catch (e) {
+                console.warn("Could not save theme preference:", e);
+            }
+
+            themeIcon.textContent = nextTheme === "dark" ? "light_mode" : "dark_mode";
+            themeToggle.setAttribute("aria-label", nextTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+            themeToggle.setAttribute("title", nextTheme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+        });
+    }
+
     // Standard Toasts handling
     const toasts = document.querySelectorAll(".toast");
     toasts.forEach(toast => {

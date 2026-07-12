@@ -1,5 +1,16 @@
 /* Styling for receipt uploads, previews and icons */
 
+:root {
+    --color-border: var(--border);
+    --color-bg-subtle: var(--paper-warm);
+    --color-bg-card: var(--paper-card);
+    --color-text-primary: var(--ink);
+    --color-danger: var(--danger);
+    --color-text-secondary: var(--ink-soft);
+    --color-primary: var(--accent);
+    --color-text-muted: var(--ink-muted);
+}
+
 .receipt-upload-container {
     margin-top: 1rem;
     padding: 1rem;
@@ -60,7 +71,7 @@
 }
 
 .receipt-btn-delete:hover {
-    background-color: rgba(220, 38, 38, 0.1);
+    background-color: var(--danger-light);
 }
 
 .receipt-link-icon {
