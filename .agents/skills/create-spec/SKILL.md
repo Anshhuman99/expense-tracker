@@ -1,85 +1,106 @@
 ---
 name: create-spec
-description: Create a spec file and feature branch for the next Spendly step.
-argument-hint: Step number and feature name, e.g. 2 registration
-allowed-tools: view_file, write_to_file, replace_file_content, list_dir, grep_search, run_command
+description: Create a Spendly feature specification and feature branch.
+argument-hint: <step-number> <feature-name>
+allowed-tools: run_command, view_file, write_to_file
 ---
 
-You are creating the next Spendly feature. Follow CLAUDE.md exactly.
+You are the Spendly specification agent.
 
 User input: $ARGUMENTS
 
-1. Verify project
-- Ensure this is a Git repo (`git rev-parse --is-inside-work-tree`).
-- Verify CLAUDE.md, app.py and database/db.py exist.
-- If not, stop.
+## Workflow
 
-2. Ensure clean working tree
-- Run `git status --porcelain`.
-- If output exists, stop and ask the user to commit or stash changes.
+### 1. Verify project
+Run:
+- git rev-parse --is-inside-work-tree
 
-3. Parse $ARGUMENTS
-Extract:
-- step_number (2→02)
-- feature_title (Title Case)
-- feature_slug (lowercase kebab-case, max 40 chars)
-- branch_name = feature/<feature_slug>
-If unclear, ask for clarification.
-
-4. Validate
-- Read CLAUDE.md.
-- Stop if the step is already complete.
-
-5. Create branch
-- Find a unique branch name (append -01, -02... if needed).
-- Run:
-  - `git checkout main`
-  - `git pull origin main`
-  - `git checkout -b <branch_name>`
-
-6. Research
-Read:
+Ensure these files exist:
 - CLAUDE.md
 - app.py
 - database/db.py
-- ai/settings/specs/*
-Reuse existing conventions. Don't duplicate specs or invent project details.
 
-7. Write spec
-Save `ai/settings/specs/<step_number>-<feature_slug>.md` with:
+Stop if any are missing.
 
-# Spec: <feature_title>
+---
 
-- Overview
-- Depends on
-- Routes (or "No new routes")
-- Database changes (or "No database changes")
-- Templates (Create / Modify)
-- Files to change
-- Files to create
-- New dependencies (or "No new dependencies")
-- Rules for implementation
-- Definition of done
+### 2. Ensure clean working tree
+Run:
+- git status --porcelain
 
-Always include these rules:
-- No SQLAlchemy/ORMs
-- Parameterised queries only
-- Passwords hashed with werkzeug
-- CSS variables only
-- No hardcoded colours
-- All templates extend base.html
+If not empty, stop and ask the user to commit or stash changes.
 
-Definition of done must be objective and testable.
+---
 
-8. Finish
+### 3. Parse input
+Extract:
+- step_number (02 format)
+- feature_title
+- feature_slug (kebab-case)
+- branch = feature/<feature_slug>
+
+---
+
+### 4. Create branch
+Run:
+- git checkout main
+- git pull origin main
+- git checkout -b feature/<feature_slug>
+
+If the branch already exists, append a suffix (e.g. -01, -02) to create a unique branch, or stop if not possible.
+
+---
+
+### 5. Read project conventions
+Read:
+- CLAUDE.md
+- database/db.py (to understand existing table structure)
+
+---
+
+### 6. Create specification
+Create:
+- ai/settings/specs/<step_number>-<feature_slug>.md
+
+Use this template:
+
+# Spec: <Feature Title>
+
+## Overview
+
+## Dependencies
+
+## Acceptance Criteria
+
+## Database Changes
+
+## Routes
+
+## Templates
+
+## Files to Modify
+
+## Files to Create
+
+## Validation
+
+## Edge Cases
+
+## Definition of Done
+
+### Implementation Constraints
+- No SQLAlchemy/ORMs (use raw SQLite via database/db.py)
+- Parameterised SQL queries only
+- Passwords hashed with werkzeug.security
+- CSS variables only (no hardcoded colours in HTML/CSS)
+- All templates must extend base.html
+
+Implementation must follow CLAUDE.md.
+
+---
+
+### 7. Finish
 Print only:
-
 Branch: <branch_name>
-Spec file: ai/settings/specs/<step_number>-<feature_slug>.md
-Title: <feature_title>
-
-Then print:
-
-Review the spec at ai/settings/specs/<step_number>-<feature_slug>.md then enter Plan Mode 
-
-Never implement code or print the spec unless requested.
+Spec: ai/settings/specs/<step_number>-<feature_slug>.md
+Next: Enter Plan Mode.
