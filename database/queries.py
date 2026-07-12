@@ -667,3 +667,24 @@ def update_recurring_rule_last_generated(rule_id, last_generated, path=None):
         conn.commit()
     finally:
         conn.close()
+
+
+def get_logged_months(user_id, path=None):
+    """
+    Retrieve list of unique YYYY-MM strings for months with recorded expenses.
+    Sorted descending (newest first).
+    """
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT strftime('%Y-%m', date) as month
+            FROM expenses
+            WHERE user_id = ?
+            ORDER BY month DESC
+            """,
+            (user_id,),
+        ).fetchall()
+        return [row["month"] for row in rows]
+    finally:
+        conn.close()

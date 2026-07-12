@@ -50,6 +50,7 @@ from database.queries import (
     create_recurring_rule,
     delete_recurring_rule,
     update_recurring_rule_last_generated,
+    get_logged_months,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -2048,6 +2049,109 @@ def delete_recurring(rule_id):
     delete_recurring_rule(rule_id)
     flash("Recurring expense rule deleted successfully.", "success")
     return redirect(url_for("recurring"))
+
+
+# ------------------------------------------------------------------ #
+# Spending Trends routes (Step 27)                                   #
+# ------------------------------------------------------------------ #
+
+
+@app.route("/trends")
+def trends():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    logged_months = get_logged_months(user_id)
+
+    # Defaults
+    today = datetime.date.today()
+    current_month_str = today.strftime("%Y-%m")
+
+    # Previous month calculation
+    first_day_current = today.replace(day=1)
+    prev_month_val = first_day_current - datetime.timedelta(days=1)
+    prev_month_str = prev_month_val.strftime("%Y-%m")
+
+    # Get from args or default
+    month_a = request.args.get("month_a", prev_month_str).strip()
+    month_b = request.args.get("month_b", current_month_str).strip()
+
+    # Validate month formats
+    for m in [month_a, month_b]:
+        try:
+            datetime.datetime.strptime(m, "%Y-%m")
+        except ValueError:
+            flash("Invalid month format selected.", "error")
+            return redirect(url_for("trends"))
+
+    # Fetch spending breakdown by category for each month
+    # get_month_category_spending returns a dict category -> total_spent
+    spending_a = get_month_category_spending(user_id, month_a)
+    spending_b = get_month_category_spending(user_id, month_b)
+
+    # Merge categories
+    all_categories = sorted(
+        list(set(list(spending_a.keys()) + list(spending_b.keys())))
+    )
+    comparison_data = []
+
+    total_a = 0.0
+    total_b = 0.0
+
+    for cat in all_categories:
+        val_a = spending_a.get(cat, 0.0)
+        val_b = spending_b.get(cat, 0.0)
+        diff = val_b - val_a
+
+        # Calculate percentage change
+        if val_a == 0.0:
+            pct_change = 100.0 if val_b > 0.0 else 0.0
+        else:
+            pct_change = (diff / val_a) * 100.0
+
+        comparison_data.append(
+            {
+                "category": cat,
+                "amount_a": val_a,
+                "amount_b": val_b,
+                "diff": diff,
+                "pct_change": pct_change,
+            }
+        )
+
+        total_a += val_a
+        total_b += val_b
+
+    # Sort categories by absolute change or total comparison spend B DESC
+    comparison_data = sorted(comparison_data, key=lambda x: x["amount_b"], reverse=True)
+
+    # Total differences
+    total_diff = total_b - total_a
+    if total_a == 0.0:
+        total_pct_change = 100.0 if total_b > 0.0 else 0.0
+    else:
+        total_pct_change = (total_diff / total_a) * 100.0
+
+    return render_template(
+        "trends.html",
+        user=user,
+        logged_months=logged_months,
+        month_a=month_a,
+        month_b=month_b,
+        comparison_data=comparison_data,
+        total_a=total_a,
+        total_b=total_b,
+        total_diff=total_diff,
+        total_pct_change=total_pct_change,
+    )
 
 
 if __name__ == "__main__":
