@@ -1860,6 +1860,11 @@ def settings_profile():
 
     # Check if the user is attempting to change their email address
     if email != user["email"]:
+        # Check if the email is already in use by another user
+        if get_user_by_email(email):
+            flash("Email already in use by another account.", "error")
+            return redirect(url_for("settings"))
+
         # Update name only in the database (keeping current email)
         try:
             update_user_profile(user_id, name, user["email"])
@@ -2320,6 +2325,22 @@ def suggestions():
         suggestions=suggestions_list,
         total_current=total_current,
     )
+
+
+@app.route("/email-import")
+def email_import():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    return render_template("email_import.html", user=user)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Email Import - Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/email_import.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="email-import-container">
+    <div class="email-import-header">
+        <h1>Email Import Sync</h1>
+        <p>We are scanning your connected inbox for recent receipts and invoices to automatically generate your expense reports.</p>
+    </div>
+
+    <div class="email-import-grid">
+        <!-- Left Side: Status & Progress -->
+        <div class="email-import-sidebar">
+            <!-- Connection Status -->
+            <div class="import-card connection-card">
+                <div class="card-header">
+                    <h3>Connection</h3>
+                    <span class="badge status-active">
+                        <span class="material-symbols-outlined icon-small">check_circle</span> Active
+                    </span>
+                </div>
+                <div class="connection-details">
+                    <div class="provider-avatar">
+                        <span class="material-symbols-outlined">mail</span>
+                    </div>
+                    <div class="connection-info">
+                        <p class="email-address">{{ user.email }}</p>
+                        <p class="provider-type">Gmail Integration</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Card -->
+            <div class="import-card progress-card">
+                <h3>Scanning Inbox</h3>
+                <p class="scan-subtext">Looking back 30 days...</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="import-progress" style="width: 78%;"></div>
+                </div>
+                <div class="progress-labels">
+                    <span id="progress-percentage">78% Complete</span>
+                    <span>Est. 45s remaining</span>
+                </div>
+                <div class="scan-stats">
+                    <div class="stat-box">
+                        <span class="stat-number">42</span>
+                        <span class="stat-label">Found</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-number">3</span>
+                        <span class="stat-label">To Review</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Card -->
+            <div class="import-card alert-card">
+                <span class="material-symbols-outlined warning-icon">warning</span>
+                <div>
+                    <h4>2 Duplicates Detected</h4>
+                    <p>We found transactions that match existing manual entries. We'll skip these.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side: Review Queue -->
+        <div class="email-import-main">
+            <div class="queue-header">
+                <div>
+                    <h2>Review Queue</h2>
+                    <p>Approve confident matches or edit details.</p>
+                </div>
+                <button class="btn btn-primary-container" id="approve-all-btn">
+                    Approve All (3)
+                </button>
+            </div>
+
+            <div class="queue-list">
+                <!-- Item 1: Delta Airlines -->
+                <div class="queue-item match-high" id="item-1">
+                    <div class="item-left">
+                        <div class="item-icon-wrapper">
+                            <span class="material-symbols-outlined">flight</span>
+                        </div>
+                        <div class="item-details">
+                            <h4>Delta Airlines</h4>
+                            <p class="item-meta">Oct 24 • Receipt #DL-8821</p>
+                            <span class="confidence-badge high-confidence">
+                                <span class="material-symbols-outlined icon-small">verified</span> 98% Match
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-right">
+                        <span class="item-amount">₹450.00</span>
+                        <div class="item-actions">
+                            <button class="action-btn reject-btn" onclick="dismissItem('item-1')" title="Reject">
+                                <span class="material-symbols-outlined">close</span>
+                            </button>
+                            <button class="action-btn approve-btn" onclick="approveItem('item-1', 'Delta Airlines', 450.00, 'Transport', '2026-10-24')" title="Approve">
+                                <span class="material-symbols-outlined">check</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2: Stripe *Merchant -->
+                <div class="queue-item match-medium" id="item-2">
+                    <div class="item-left">
+                        <div class="item-icon-wrapper">
+                            <span class="material-symbols-outlined">restaurant</span>
+                        </div>
+                        <div class="item-details">
+                            <h4>Stripe *Merchant</h4>
+                            <p class="item-meta">Oct 23 • Missing Category</p>
+                            <span class="confidence-badge medium-confidence">
+                                <span class="material-symbols-outlined icon-small">error</span> 45% Match - Needs Review
+                            </span>
+                        </div>
+                    </div>
+                    <div class="item-right">
+                        <span class="item-amount">₹42.50</span>
+                        <a href="{{ url_for('add_expense') }}?amount=42.50&description=Stripe+Merchant&date=2026-10-23" class="btn btn-secondary">
+                            Review
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Item 3: Uber Rides (Duplicate) -->
+                <div class="queue-item match-duplicate" id="item-3">
+                    <div class="item-left">
+                        <div class="item-icon-wrapper">
+                            <span class="material-symbols-outlined">local_taxi</span>
+                        </div>
+                        <div class="item-details">
+                            <h4 class="strike-through">Uber Rides</h4>
+                            <p class="item-meta">Oct 22 • Duplicate Detected</p>
+                        </div>
+                    </div>
+                    <div class="item-right">
+                        <span class="item-amount text-muted">₹24.00</span>
+                        <span class="skipped-label">Skipped</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const progressBar = document.getElementById('import-progress');
+        const percentageText = document.getElementById('progress-percentage');
+        if (progressBar) {
+            setTimeout(() => {
+                progressBar.style.width = '100%';
+                if (percentageText) {
+                    percentageText.textContent = '100% Complete';
+                }
+            }, 2000);
+        }
+    });
+
+    function dismissItem(itemId) {
+        const item = document.getElementById(itemId);
+        if (item) {
+            item.style.transition = 'all 0.3s ease';
+            item.style.opacity = '0';
+            item.style.transform = 'translateX(20px)';
+            setTimeout(() => {
+                item.remove();
+            }, 300);
+        }
+    }
+
+    function approveItem(itemId, description, amount, category, date) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{{ url_for('add_expense') }}";
+        
+        const inputs = {
+            'description': description,
+            'amount': amount,
+            'category': category,
+            'date': date
+        };
+        
+        for (const [key, value] of Object.entries(inputs)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
+{% endblock %}
