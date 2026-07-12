@@ -46,7 +46,15 @@ def init_db(path=None):
         )
         for mf in migration_files:
             with open(os.path.join(migrations_dir, mf), "r") as fh:
-                conn.executescript(fh.read())
+                sql_content = fh.read()
+                try:
+                    conn.executescript(sql_content)
+                except sqlite3.OperationalError as e:
+                    # Ignore error if column/table already exists
+                    if "duplicate column name" in str(e).lower():
+                        pass
+                    else:
+                        raise e
         if migration_files:
             conn.commit()
 
@@ -65,12 +73,14 @@ def create_user(name, email, password, path=None):
         conn.close()
 
 
-def create_expense(user_id, amount, category, date, description, path=None):
+def create_expense(
+    user_id, amount, category, date, description, receipt_path=None, path=None
+):
     conn = get_db(path)
     try:
         conn.execute(
-            "INSERT INTO expenses (user_id, amount, category, date, description) VALUES (?, ?, ?, ?, ?)",
-            (user_id, amount, category, date, description),
+            "INSERT INTO expenses (user_id, amount, category, date, description, receipt_path) VALUES (?, ?, ?, ?, ?, ?)",
+            (user_id, amount, category, date, description, receipt_path),
         )
         conn.commit()
     finally:
@@ -115,7 +125,9 @@ def get_user_by_email(email, path=None):
         conn.close()
 
 
-def update_expense(expense_id, amount, category, date, description, path=None):
+def update_expense(
+    expense_id, amount, category, date, description, receipt_path=None, path=None
+):
     """
     Update an existing expense record.
     """
@@ -124,10 +136,10 @@ def update_expense(expense_id, amount, category, date, description, path=None):
         conn.execute(
             """
             UPDATE expenses 
-            SET amount = ?, category = ?, date = ?, description = ? 
+            SET amount = ?, category = ?, date = ?, description = ?, receipt_path = ? 
             WHERE id = ?
             """,
-            (amount, category, date, description, expense_id),
+            (amount, category, date, description, receipt_path, expense_id),
         )
         conn.commit()
     finally:

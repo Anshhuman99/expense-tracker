@@ -108,7 +108,7 @@ def get_recent_transactions(user_id, limit=10, sort_by="date", order="DESC", pat
         path (str, optional): Custom database file path.
 
     Returns:
-        list of dict: A list of transactions containing keys: id, date, description, category, amount.
+        list of dict: A list of transactions containing keys: id, date, description, category, amount, receipt_path.
     """
     sort_col, sort_order = _get_sort_clause(sort_by, order)
 
@@ -116,7 +116,7 @@ def get_recent_transactions(user_id, limit=10, sort_by="date", order="DESC", pat
     try:
         rows = conn.execute(
             f"""
-            SELECT id, date, description, category, amount 
+            SELECT id, date, description, category, amount, receipt_path 
             FROM expenses 
             WHERE user_id = ? 
             ORDER BY {sort_col} {sort_order}, id DESC 
@@ -244,7 +244,7 @@ def get_filtered_expenses(
 
     conn = get_db(path)
     try:
-        query = f"SELECT id, amount, category, date, description FROM expenses WHERE {where_clause}"
+        query = f"SELECT id, amount, category, date, description, receipt_path FROM expenses WHERE {where_clause}"
         query += f" ORDER BY {sort_col} {sort_order}, id DESC"
 
         if limit is not None:
@@ -287,13 +287,13 @@ def get_filtered_expenses_count(
 def get_expense_by_id(expense_id, path=None):
     """
     Retrieve a single expense by its ID.
-    Returns a dict with keys: id, user_id, amount, category, date, description
+    Returns a dict with keys: id, user_id, amount, category, date, description, receipt_path
     or None if the expense does not exist.
     """
     conn = get_db(path)
     try:
         row = conn.execute(
-            "SELECT id, user_id, amount, category, date, description FROM expenses WHERE id = ?",
+            "SELECT id, user_id, amount, category, date, description, receipt_path FROM expenses WHERE id = ?",
             (expense_id,),
         ).fetchone()
         return dict(row) if row else None
@@ -553,15 +553,24 @@ def get_user_full_by_id(user_id, path=None):
 def delete_user_account(user_id, path=None):
     """
     Delete the user's account and all associated expenses and budgets inside a transaction.
+    Returns a list of receipt paths for deleted expenses so they can be cleaned up on disk.
     """
     conn = get_db(path)
     try:
         conn.execute("BEGIN TRANSACTION")
+        # Fetch all receipt paths first to clean up physical files
+        rows = conn.execute(
+            "SELECT receipt_path FROM expenses WHERE user_id = ? AND receipt_path IS NOT NULL",
+            (user_id,),
+        ).fetchall()
+        receipt_paths = [row["receipt_path"] for row in rows]
+
         # Explicitly clean up referencing tables since schema doesn't have ON DELETE CASCADE
         conn.execute("DELETE FROM expenses WHERE user_id = ?", (user_id,))
         conn.execute("DELETE FROM budgets WHERE user_id = ?", (user_id,))
         conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
         conn.commit()
+        return receipt_paths
     except Exception as e:
         conn.rollback()
         raise e

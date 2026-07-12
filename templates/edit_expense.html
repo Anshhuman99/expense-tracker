@@ -4,6 +4,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_expense.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/receipt.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +17,7 @@
         </div>
 
         <div class="auth-card">
-            <form method="POST" action="{{ url_for('edit_expense', id=expense.id) }}">
+            <form method="POST" action="{{ url_for('edit_expense', id=expense.id) }}" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="amount">Amount (₹) <span class="required-asterisk">*</span></label>
                     <input type="number" id="amount" name="amount" step="0.01" min="0.01"
@@ -41,6 +42,33 @@
                 <div class="form-group">
                     <label for="description">Description</label>
                     <input type="text" id="description" name="description" class="form-input" placeholder="e.g. Weekly groceries" value="{{ description }}">
+                </div>
+
+                {% if expense.receipt_path %}
+                <div class="form-group">
+                    <label>Current Receipt</label>
+                    <div class="receipt-preview-box">
+                        <div class="receipt-preview-info">
+                            {% if expense.receipt_path.lower().endswith('.pdf') %}
+                            <span class="material-symbols-outlined" style="font-size: 2.5rem; color: var(--color-danger);">picture_as_pdf</span>
+                            {% else %}
+                            <img src="{{ url_for('serve_receipt', expense_id=expense.id) }}" class="receipt-preview-thumbnail" alt="Receipt preview">
+                            {% endif %}
+                            <a href="{{ url_for('serve_receipt', expense_id=expense.id) }}" target="_blank" class="receipt-preview-name">
+                                View Attached Receipt
+                            </a>
+                        </div>
+                        <button type="submit" name="delete_receipt" value="1" class="receipt-btn-delete" title="Delete Receipt">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <label for="receipt">{% if expense.receipt_path %}Replace Receipt{% else %}Attach Receipt{% endif %}</label>
+                    <input type="file" id="receipt" name="receipt" class="form-input" accept="image/png, image/jpeg, application/pdf">
+                    <p class="receipt-helper-text">Accepted formats: PNG, JPG, JPEG, PDF. Max size: 5MB.</p>
                 </div>
 
                 <div class="form-actions">

@@ -10,6 +10,7 @@ from flask import (
     get_flashed_messages,
     abort,
     Response,
+    send_from_directory,
 )
 import json
 from database.db import (
@@ -47,6 +48,7 @@ from database.queries import (
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 import sqlite3
+import os
 import re
 import datetime
 import math
@@ -357,6 +359,20 @@ def _build_expense_pdf(expenses, total_spent, total_count, active_filters):
 
 app = Flask(__name__)
 app.secret_key = "dev-secret-key"
+
+# Receipt upload configuration
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "pdf"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB size limit
+
+# Ensure upload directory exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 with app.app_context():
     init_db()
@@ -1207,7 +1223,30 @@ def add_expense():
                 categories=ALLOWED_CATEGORIES,
             )
 
-        create_expense(user_id, amount, category, date_str, description)
+        # Handle receipt upload
+        receipt_path = None
+        if "receipt" in request.files:
+            file = request.files["receipt"]
+            if file and file.filename != "":
+                if not allowed_file(file.filename):
+                    flash("Invalid file type. Allowed: PNG, JPG, JPEG, PDF.", "error")
+                    return render_template(
+                        "add_expense.html",
+                        amount=amount_str,
+                        category=category,
+                        date=date_str,
+                        description=description,
+                        categories=ALLOWED_CATEGORIES,
+                    )
+                import uuid
+                from werkzeug.utils import secure_filename
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
+                receipt_path = unique_filename
+
+        create_expense(user_id, amount, category, date_str, description, receipt_path)
         flash("Expense added successfully!", "success")
         return redirect(url_for("profile"))
 
@@ -1299,7 +1338,51 @@ def edit_expense(id):
                 categories=ALLOWED_CATEGORIES,
             )
 
-        update_expense(id, amount, category, date_str, description)
+        # Handle receipt delete or upload update
+        receipt_path = expense.get("receipt_path")
+
+        if request.form.get("delete_receipt") == "1":
+            if receipt_path:
+                try:
+                    os.remove(os.path.join(app.config["UPLOAD_FOLDER"], receipt_path))
+                except FileNotFoundError:
+                    pass
+                receipt_path = None
+            update_expense(id, amount, category, date_str, description, receipt_path)
+            flash("Receipt deleted successfully!", "success")
+            return redirect(url_for("edit_expense", id=id))
+
+        if "receipt" in request.files:
+            file = request.files["receipt"]
+            if file and file.filename != "":
+                if not allowed_file(file.filename):
+                    flash("Invalid file type. Allowed: PNG, JPG, JPEG, PDF.", "error")
+                    return render_template(
+                        "edit_expense.html",
+                        expense=expense,
+                        amount=amount_str,
+                        category=category,
+                        date=date_str,
+                        description=description,
+                        categories=ALLOWED_CATEGORIES,
+                    )
+                # Delete old file
+                if receipt_path:
+                    try:
+                        os.remove(
+                            os.path.join(app.config["UPLOAD_FOLDER"], receipt_path)
+                        )
+                    except FileNotFoundError:
+                        pass
+                import uuid
+                from werkzeug.utils import secure_filename
+
+                filename = secure_filename(file.filename)
+                unique_filename = f"{uuid.uuid4().hex}_{filename}"
+                file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
+                receipt_path = unique_filename
+
+        update_expense(id, amount, category, date_str, description, receipt_path)
         flash("Expense updated successfully!", "success")
         return redirect(url_for("profile"))
 
@@ -1336,6 +1419,13 @@ def delete_expense(id):
         abort(403)
 
     if request.method == "POST":
+        # Clean up physical file if it exists
+        receipt_path = expense.get("receipt_path")
+        if receipt_path:
+            try:
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], receipt_path))
+            except FileNotFoundError:
+                pass
         db_delete_expense(id)
         flash("Expense deleted successfully!", "success")
         return redirect(url_for("profile"))
@@ -1344,6 +1434,32 @@ def delete_expense(id):
     return render_template(
         "delete_expense.html",
         expense=expense,
+    )
+
+
+@app.route("/expenses/<int:expense_id>/receipt")
+def serve_receipt(expense_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    expense = get_expense_by_id(expense_id)
+    if not expense:
+        abort(404)
+
+    # Ownership check
+    if expense["user_id"] != user_id:
+        abort(403)
+
+    if not expense.get("receipt_path"):
+        abort(404)
+
+    as_attachment = expense["receipt_path"].lower().endswith(".pdf")
+    return send_from_directory(
+        app.config["UPLOAD_FOLDER"],
+        expense["receipt_path"],
+        as_attachment=as_attachment,
     )
 
 
@@ -1715,7 +1831,14 @@ def delete_account():
             return redirect(url_for("delete_account"))
 
         try:
-            delete_user_account(user_id)
+            # Delete user's account and get their receipt paths
+            receipt_paths = delete_user_account(user_id)
+            for path_val in receipt_paths:
+                if path_val:
+                    try:
+                        os.remove(os.path.join(app.config["UPLOAD_FOLDER"], path_val))
+                    except FileNotFoundError:
+                        pass
             session.clear()
             flash("Your account has been permanently deleted.", "success")
             return redirect(url_for("landing"))
