@@ -1852,6 +1852,48 @@ def settings_profile():
         flash("Invalid email address.", "error")
         return redirect(url_for("settings"))
 
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    # Check if the user is attempting to change their email address
+    if email != user["email"]:
+        # Update name only in the database (keeping current email)
+        try:
+            update_user_profile(user_id, name, user["email"])
+            session["user_name"] = name
+        except Exception:
+            pass
+
+        # Prepare Gmail compose URL
+        import urllib.parse
+
+        subject = "Request to Change Email Address"
+        body = (
+            f"Hello,\n\n"
+            f"I would like to request a change of my email address for my Spendly account.\n\n"
+            f"Current Email: {user['email']}\n"
+            f"Requested Email: {email}\n\n"
+            f"Please process this change. Thank you."
+        )
+        params = {
+            "view": "cm",
+            "fs": "1",
+            "to": "workforansh777@gmail.com",
+            "su": subject,
+            "body": body,
+        }
+        gmail_url = "https://mail.google.com/mail/?" + urllib.parse.urlencode(params)
+
+        return render_template(
+            "email_change_redirect.html",
+            current_email=user["email"],
+            new_email=email,
+            gmail_url=gmail_url,
+        )
+
     try:
         update_user_profile(user_id, name, email)
         session["user_name"] = name
@@ -2197,7 +2239,7 @@ def suggestions():
                 "type": "danger",
                 "category": "Food",
                 "title": "High Food & Dining Spend",
-                "description": f"You have spent ${food_spend:.2f} on Food this month, which represents {((food_spend / total_current) * 100):.1f}% of your overall spending. Try preparing meals at home, packing lunches, or setting a weekly limit on food delivery apps.",
+                "description": f"You have spent ₹{food_spend:.2f} on Food this month, which represents {((food_spend / total_current) * 100):.1f}% of your overall spending. Try preparing meals at home, packing lunches, or setting a weekly limit on food delivery apps.",
                 "impact": "High",
             }
         )
@@ -2215,7 +2257,7 @@ def suggestions():
                         "type": "danger",
                         "category": cat,
                         "title": f"Exceeded {cat} Budget",
-                        "description": f"You have spent ${actual:.2f} in the '{cat}' category, exceeding your set budget limit of ${limit:.2f} by ${actual - limit:.2f}.",
+                        "description": f"You have spent ₹{actual:.2f} in the '{cat}' category, exceeding your set budget limit of ₹{limit:.2f} by ₹{actual - limit:.2f}.",
                         "impact": "Critical",
                     }
                 )
@@ -2225,7 +2267,7 @@ def suggestions():
                         "type": "warning",
                         "category": cat,
                         "title": f"Approaching {cat} Budget Limit",
-                        "description": f"You have spent ${actual:.2f} ({ratio * 100:.1f}%) of your set budget limit (${limit:.2f}) for '{cat}'. Consider pausing non-essential purchases here for the rest of the month.",
+                        "description": f"You have spent ₹{actual:.2f} ({ratio * 100:.1f}%) of your set budget limit (₹{limit:.2f}) for '{cat}'. Consider pausing non-essential purchases here for the rest of the month.",
                         "impact": "Medium",
                     }
                 )
@@ -2242,7 +2284,7 @@ def suggestions():
                         "type": "warning",
                         "category": cat,
                         "title": f"Spike in {cat} Spending",
-                        "description": f"Your spending in '{cat}' increased from ${val_a:.2f} last month to ${val_b:.2f} this month—a spike of {pct:.1f}%. Take a look at your transactions to find what drove this change.",
+                        "description": f"Your spending in '{cat}' increased from ₹{val_a:.2f} last month to ₹{val_b:.2f} this month—a spike of {pct:.1f}%. Take a look at your transactions to find what drove this change.",
                         "impact": "Medium",
                     }
                 )
@@ -2267,7 +2309,7 @@ def suggestions():
                     "type": "info",
                     "category": top_cat,
                     "title": f"Optimize Top Category: {top_cat}",
-                    "description": f"Your highest expense category this month is '{top_cat}' with ${top_val:.2f} spent. {tips.get(top_cat, 'Review recent entries to locate potential savings.')}",
+                    "description": f"Your highest expense category this month is '{top_cat}' with ₹{top_val:.2f} spent. {tips.get(top_cat, 'Review recent entries to locate potential savings.')}",
                     "impact": "Medium",
                 }
             )

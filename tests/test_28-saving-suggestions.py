@@ -179,7 +179,7 @@ def test_rule_mom_spending_spike(client, tmp_path):
     res = client.get("/suggestions")
     assert res.status_code == 200
     assert b"Spike in Transport Spending" in res.data
-    assert b"increased from $50.00" in res.data
+    assert b"increased from \xe2\x82\xb950.00" in res.data
 
 
 def test_rule_top_category_optimization_tip(client, tmp_path):

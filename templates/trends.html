@@ -52,18 +52,18 @@
     <div class="metrics-grid">
         <div class="metric-card">
             <div class="metric-title">Spent in {{ month_a }}</div>
-            <div class="metric-value">${{ "%.2f"|format(total_a) }}</div>
+            <div class="metric-value">₹{{ "%.2f"|format(total_a) }}</div>
         </div>
 
         <div class="metric-card">
             <div class="metric-title">Spent in {{ month_b }}</div>
-            <div class="metric-value">${{ "%.2f"|format(total_b) }}</div>
+            <div class="metric-value">₹{{ "%.2f"|format(total_b) }}</div>
         </div>
 
         <div class="metric-card {% if total_diff > 0 %}trend-up{% elif total_diff < 0 %}trend-down{% endif %}">
             <div class="metric-title">Overall Difference</div>
             <div class="metric-value">
-                {% if total_diff > 0 %}+{% endif %}${{ "%.2f"|format(total_diff) }}
+                {% if total_diff > 0 %}+{% endif %}₹{{ "%.2f"|format(total_diff) }}
             </div>
             <div class="metric-trend-percentage">
                 {% if total_diff > 0 %}
@@ -105,10 +105,10 @@
                             <span class="category-indicator category-{{ item.category.lower() }}"></span>
                             {{ item.category }}
                         </td>
-                        <td class="text-right">${{ "%.2f"|format(item.amount_a) }}</td>
-                        <td class="text-right">${{ "%.2f"|format(item.amount_b) }}</td>
+                        <td class="text-right">₹{{ "%.2f"|format(item.amount_a) }}</td>
+                        <td class="text-right">₹{{ "%.2f"|format(item.amount_b) }}</td>
                         <td class="text-right {% if item.diff > 0 %}diff-up{% elif item.diff < 0 %}diff-down{% endif %}">
-                            {% if item.diff > 0 %}+{% endif %}${{ "%.2f"|format(item.diff) }}
+                            {% if item.diff > 0 %}+{% endif %}₹{{ "%.2f"|format(item.diff) }}
                         </td>
                         <td class="text-right">
                             {% if item.amount_a == 0.0 and item.amount_b > 0.0 %}

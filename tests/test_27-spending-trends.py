@@ -111,19 +111,19 @@ def test_trends_happy_path(client):
     # Verify metrics totals
     assert b"Spent in 2026-05" in response.data
     assert b"Spent in 2026-06" in response.data
-    assert b"$300.00" in response.data
-    assert b"$250.00" in response.data
+    assert b"\xe2\x82\xb9300.00" in response.data
+    assert b"\xe2\x82\xb9250.00" in response.data
 
     # Total diff: -50.00, which is -16.666% (shows as Decreased by 16.7%)
-    assert b"$-50.00" in response.data
+    assert b"\xe2\x82\xb9-50.00" in response.data
     assert b"Decreased by 16.7%" in response.data
 
     # Food diff: +50.00 (+50.0%)
-    assert b"+$50.00" in response.data
+    assert b"+\xe2\x82\xb950.00" in response.data
     assert b"+50.0%" in response.data
 
-    # Bills diff: -$100.00 (-50.0%)
-    assert b"$-100.00" in response.data
+    # Bills diff: -100.00 (-50.0%)
+    assert b"\xe2\x82\xb9-100.00" in response.data
     assert b"-50.0%" in response.data
 
 
@@ -161,8 +161,8 @@ def test_trends_edge_cases(client):
 
     response = client.get("/trends?month_a=2026-05&month_b=2026-06")
     assert response.status_code == 200
-    assert b"$0.00" in response.data  # Spent in base month
-    assert b"$100.00" in response.data  # Spent in comparison month
+    assert b"\xe2\x82\xb90.00" in response.data  # Spent in base month
+    assert b"\xe2\x82\xb9100.00" in response.data  # Spent in comparison month
     # Percentage change for total should be +100% since total_a was 0.0
     assert b"Increased by 100.0%" in response.data
     # Category Food should be marked as "New Category" since amount_a was 0.0 and amount_b > 0.0
@@ -182,9 +182,9 @@ def test_trends_edge_cases(client):
     response = client.get("/trends?month_a=2026-07&month_b=2026-08")
     assert response.status_code == 200
     # Total A: 50.00, Total B: 100.00 -> Diff +50.00 (+100.0%)
-    assert b"$50.00" in response.data
-    assert b"$100.00" in response.data
-    assert b"+$50.00" in response.data
+    assert b"\xe2\x82\xb950.00" in response.data
+    assert b"\xe2\x82\xb9100.00" in response.data
+    assert b"+\xe2\x82\xb950.00" in response.data
     assert b"Increased by 100.0%" in response.data
 
     # Food was only in B (amount_a = 0.0, amount_b = 100.0) -> New Category
@@ -193,7 +193,7 @@ def test_trends_edge_cases(client):
 
     # Entertainment was only in A (amount_a = 50.0, amount_b = 0.0) -> Diff -$50.00 (-100.0%)
     assert b"Entertainment" in response.data
-    assert b"$-50.00" in response.data
+    assert b"\xe2\x82\xb9-50.00" in response.data
     assert b"-100.0%" in response.data
 
 
