@@ -47,6 +47,8 @@ from database.queries import (
     delete_user_account,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+import uuid
 import sqlite3
 import os
 import re
@@ -372,6 +374,21 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def save_uploaded_receipt(file):
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
+    return unique_filename
+
+
+def delete_receipt_file(filename):
+    if filename:
+        try:
+            os.remove(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        except FileNotFoundError:
+            pass
 
 
 with app.app_context():
@@ -1238,13 +1255,7 @@ def add_expense():
                         description=description,
                         categories=ALLOWED_CATEGORIES,
                     )
-                import uuid
-                from werkzeug.utils import secure_filename
-
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
-                receipt_path = unique_filename
+                receipt_path = save_uploaded_receipt(file)
 
         create_expense(user_id, amount, category, date_str, description, receipt_path)
         flash("Expense added successfully!", "success")
@@ -1343,10 +1354,7 @@ def edit_expense(id):
 
         if request.form.get("delete_receipt") == "1":
             if receipt_path:
-                try:
-                    os.remove(os.path.join(app.config["UPLOAD_FOLDER"], receipt_path))
-                except FileNotFoundError:
-                    pass
+                delete_receipt_file(receipt_path)
                 receipt_path = None
             update_expense(id, amount, category, date_str, description, receipt_path)
             flash("Receipt deleted successfully!", "success")
@@ -1368,19 +1376,8 @@ def edit_expense(id):
                     )
                 # Delete old file
                 if receipt_path:
-                    try:
-                        os.remove(
-                            os.path.join(app.config["UPLOAD_FOLDER"], receipt_path)
-                        )
-                    except FileNotFoundError:
-                        pass
-                import uuid
-                from werkzeug.utils import secure_filename
-
-                filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
-                file.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
-                receipt_path = unique_filename
+                    delete_receipt_file(receipt_path)
+                receipt_path = save_uploaded_receipt(file)
 
         update_expense(id, amount, category, date_str, description, receipt_path)
         flash("Expense updated successfully!", "success")
@@ -1422,10 +1419,7 @@ def delete_expense(id):
         # Clean up physical file if it exists
         receipt_path = expense.get("receipt_path")
         if receipt_path:
-            try:
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], receipt_path))
-            except FileNotFoundError:
-                pass
+            delete_receipt_file(receipt_path)
         db_delete_expense(id)
         flash("Expense deleted successfully!", "success")
         return redirect(url_for("profile"))
@@ -1835,10 +1829,7 @@ def delete_account():
             receipt_paths = delete_user_account(user_id)
             for path_val in receipt_paths:
                 if path_val:
-                    try:
-                        os.remove(os.path.join(app.config["UPLOAD_FOLDER"], path_val))
-                    except FileNotFoundError:
-                        pass
+                    delete_receipt_file(path_val)
             session.clear()
             flash("Your account has been permanently deleted.", "success")
             return redirect(url_for("landing"))
