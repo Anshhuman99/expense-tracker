@@ -1,27 +1,27 @@
 /* Savings suggestions stylesheet */
 
 :root {
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
-    --color-green: #2d6a4f;
-    --color-green-light: #f0fdf4;
-    --color-green-border: #bbf7d0;
-    --color-green-text: #156534;
-    --color-red: #ef4444;
-    --color-red-light: #fef2f2;
-    --color-red-border: #fca5a5;
-    --color-red-text: #991b1b;
-    --color-amber: #f59e0b;
-    --color-amber-light: #fffbeb;
-    --color-amber-border: #fde68a;
-    --color-amber-text: #92400e;
-    --color-blue: #3b82f6;
-    --color-blue-light: #eff6ff;
-    --color-blue-border: #bfdbfe;
-    --color-blue-text: #1e40af;
+    --card-bg: var(--paper-card);
+    --card-border: var(--border);
+    --text-primary: var(--ink);
+    --text-secondary: var(--ink-soft);
+    --text-muted: var(--ink-muted);
+    --color-green: var(--accent);
+    --color-green-light: var(--accent-light);
+    --color-green-border: var(--success-border);
+    --color-green-text: var(--success);
+    --color-red: var(--danger);
+    --color-red-light: var(--danger-light);
+    --color-red-border: var(--danger-border);
+    --color-red-text: var(--danger);
+    --color-amber: var(--accent-2);
+    --color-amber-light: var(--accent-2-light);
+    --color-amber-border: var(--badge-food-color);
+    --color-amber-text: var(--accent-2);
+    --color-blue: var(--chart-3);
+    --color-blue-light: var(--badge-transport-bg);
+    --color-blue-border: var(--badge-transport-color);
+    --color-blue-text: var(--badge-transport-color);
 }
 
 .suggestions-container {
@@ -123,7 +123,7 @@
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-secondary);
-    background-color: #f3f4f6;
+    background-color: var(--border-soft);
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
 }
@@ -157,8 +157,8 @@
     color: var(--color-red-text);
 }
 .badge-danger {
-    background-color: #ef4444;
-    color: #ffffff;
+    background-color: var(--color-red);
+    color: var(--paper-card);
 }
 
 .item-type-warning {
@@ -171,8 +171,8 @@
     color: var(--color-amber-text);
 }
 .badge-warning {
-    background-color: #f59e0b;
-    color: #ffffff;
+    background-color: var(--color-amber);
+    color: var(--paper-card);
 }
 
 .item-type-info {
@@ -185,6 +185,6 @@
     color: var(--color-blue-text);
 }
 .badge-info {
-    background-color: #3b82f6;
-    color: #ffffff;
+    background-color: var(--color-blue);
+    color: var(--paper-card);
 }

@@ -11,6 +11,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/flash_messages.css') }}">
     {% block head %}{% endblock %}
+    <script>
+      (function() {
+        var t = null;
+        try {
+          t = localStorage.getItem('spendly-theme');
+        } catch(e) {}
+        if (!t) {
+          t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+      })();
+    </script>
 </head>
 <body>
 
@@ -20,9 +32,14 @@
                 <span class="brand-icon">◈</span>
                 <span class="brand-name">Spendly</span>
             </a>
-            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links-menu">
-                <span class="material-symbols-outlined">menu</span>
-            </button>
+            <div class="nav-right">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+                    <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+                </button>
+                <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-links-menu">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
             <div class="nav-links" id="nav-links-menu">
                 {% if session.get('user_id') %}
                     <span class="nav-user">Hello, {{ session.get('user_name') }}</span>

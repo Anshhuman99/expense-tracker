@@ -1,11 +1,11 @@
 /* Recurring Expenses Stylesheet */
 
 :root {
-    --card-bg: #ffffff;
-    --card-border: #e5e7eb;
-    --text-primary: #111827;
-    --text-secondary: #4b5563;
-    --text-muted: #9ca3af;
+    --card-bg: var(--paper-card);
+    --card-border: var(--border);
+    --text-primary: var(--ink);
+    --text-secondary: var(--ink-soft);
+    --text-muted: var(--ink-muted);
 }
 
 .recurring-container, .recurring-form-container {
@@ -121,14 +121,14 @@
     letter-spacing: 0.05em;
 }
 
-/* Category Badge Colors mapped to theme HSL/hex equivalents */
-.category-food { background-color: #fee2e2; color: #991b1b; }
-.category-transport { background-color: #fef3c7; color: #92400e; }
-.category-bills { background-color: #d1fae5; color: #065f46; }
-.category-health { background-color: #e0f2fe; color: #075985; }
-.category-entertainment { background-color: #f3e8ff; color: #6b21a8; }
-.category-shopping { background-color: #fce7f3; color: #9d174d; }
-.category-other { background-color: #f3f4f6; color: #374151; }
+/* Category Badge Colors mapped to theme variables */
+.category-food { background-color: var(--badge-food-bg); color: var(--badge-food-color); }
+.category-transport { background-color: var(--badge-transport-bg); color: var(--badge-transport-color); }
+.category-bills { background-color: var(--badge-bills-bg); color: var(--badge-bills-color); }
+.category-health { background-color: var(--badge-health-bg); color: var(--badge-health-color); }
+.category-entertainment { background-color: var(--badge-entertainment-bg); color: var(--badge-entertainment-color); }
+.category-shopping { background-color: var(--badge-shopping-bg); color: var(--badge-shopping-color); }
+.category-other { background-color: var(--badge-other-bg); color: var(--badge-other-color); }
 
 .rule-frequency {
     font-size: 0.85rem;
@@ -183,7 +183,7 @@
 .btn-delete-rule {
     background: none;
     border: none;
-    color: #ef4444;
+    color: var(--danger);
     cursor: pointer;
     font-size: 0.875rem;
     font-weight: 500;
@@ -196,7 +196,7 @@
 }
 
 .btn-delete-rule:hover {
-    background-color: #fee2e2;
+    background-color: var(--danger-light);
 }
 
 /* Form Styles */
@@ -220,7 +220,7 @@
     border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 2rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 6px -1px var(--shadow-color);
 }
 
 .recurring-form {
@@ -242,7 +242,7 @@
 }
 
 .required {
-    color: #ef4444;
+    color: var(--danger);
 }
 
 .form-control {
@@ -257,11 +257,11 @@
 }
 
 .form-control:focus {
-    border-color: #2D6A4F;
+    border-color: var(--accent);
 }
 
 .select-control {
-    background-color: #fff;
+    background-color: var(--paper-card);
     cursor: pointer;
 }
 

@@ -156,7 +156,7 @@
 
 .btn-primary {
     background: var(--accent);
-    color: #fff;
+    color: var(--paper);
 }
 
 .btn-primary:hover {
@@ -166,7 +166,7 @@
 
 .btn-danger {
     background: var(--danger);
-    color: #fff;
+    color: var(--paper);
 }
 
 .btn-danger:hover {
