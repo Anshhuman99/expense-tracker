@@ -2154,6 +2154,132 @@ def trends():
     )
 
 
+# ------------------------------------------------------------------ #
+# Savings Suggestions routes (Step 28)                               #
+# ------------------------------------------------------------------ #
+
+
+@app.route("/suggestions")
+def suggestions():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    today = datetime.date.today()
+    current_month = today.strftime("%Y-%m")
+
+    # Previous month
+    first_day_current = today.replace(day=1)
+    prev_month_val = first_day_current - datetime.timedelta(days=1)
+    prev_month = prev_month_val.strftime("%Y-%m")
+
+    # Fetch spending details
+    spending_current = get_month_category_spending(user_id, current_month)
+    spending_prev = get_month_category_spending(user_id, prev_month)
+    budgets_current = get_budgets_for_month(user_id, current_month)
+
+    total_current = sum(spending_current.values())
+
+    suggestions_list = []
+
+    # Rule 1: High Dining Spend (>30% of current month)
+    food_spend = spending_current.get("Food", 0.0)
+    if total_current > 0 and (food_spend / total_current) > 0.30:
+        suggestions_list.append(
+            {
+                "type": "danger",
+                "category": "Food",
+                "title": "High Food & Dining Spend",
+                "description": f"You have spent ${food_spend:.2f} on Food this month, which represents {((food_spend / total_current) * 100):.1f}% of your overall spending. Try preparing meals at home, packing lunches, or setting a weekly limit on food delivery apps.",
+                "impact": "High",
+            }
+        )
+
+    # Rule 2: Over-budget warning (spend >= 90% of budget)
+    for b in budgets_current:
+        cat = b["category"]
+        limit = b["amount"]
+        actual = spending_current.get(cat, 0.0)
+        if limit > 0:
+            ratio = actual / limit
+            if ratio >= 1.0:
+                suggestions_list.append(
+                    {
+                        "type": "danger",
+                        "category": cat,
+                        "title": f"Exceeded {cat} Budget",
+                        "description": f"You have spent ${actual:.2f} in the '{cat}' category, exceeding your set budget limit of ${limit:.2f} by ${actual - limit:.2f}.",
+                        "impact": "Critical",
+                    }
+                )
+            elif ratio >= 0.90:
+                suggestions_list.append(
+                    {
+                        "type": "warning",
+                        "category": cat,
+                        "title": f"Approaching {cat} Budget Limit",
+                        "description": f"You have spent ${actual:.2f} ({ratio * 100:.1f}%) of your set budget limit (${limit:.2f}) for '{cat}'. Consider pausing non-essential purchases here for the rest of the month.",
+                        "impact": "Medium",
+                    }
+                )
+
+    # Rule 3: Month-over-Month Category Increase (>=20% increase, base spend > $20)
+    for cat, val_b in spending_current.items():
+        val_a = spending_prev.get(cat, 0.0)
+        if val_a > 20.0:
+            diff = val_b - val_a
+            pct = (diff / val_a) * 100.0
+            if pct >= 20.0:
+                suggestions_list.append(
+                    {
+                        "type": "warning",
+                        "category": cat,
+                        "title": f"Spike in {cat} Spending",
+                        "description": f"Your spending in '{cat}' increased from ${val_a:.2f} last month to ${val_b:.2f} this month—a spike of {pct:.1f}%. Take a look at your transactions to find what drove this change.",
+                        "impact": "Medium",
+                    }
+                )
+
+    # Rule 4: Top Category Focus advice
+    if spending_current:
+        # Find highest spending category in current month
+        top_cat = max(spending_current, key=spending_current.get)
+        top_val = spending_current[top_cat]
+        if top_val > 0.0:
+            tips = {
+                "Food": "Consider making a structured grocery list and meal-prepping to cut down on impulse restaurant ordering.",
+                "Transport": "Look into public transit options, carpooling, or bundle errands to save on fuel and ride-hailing fees.",
+                "Bills": "Check if you have unused streaming subscriptions or if you can negotiate better utility, internet, or insurance rates.",
+                "Health": "Check if your health insurance covers your current prescriptions or look into generic brand alternatives.",
+                "Entertainment": "Look for free local events, host home gatherings, or share premium entertainment accounts with family members.",
+                "Shopping": "Implement a 48-hour cool-down rule before purchasing non-essential items online to avoid impulse spending.",
+                "Other": "Look closely at your miscellaneous expenditures. Keeping a detailed log for these helps identify hidden cash leaks.",
+            }
+            suggestions_list.append(
+                {
+                    "type": "info",
+                    "category": top_cat,
+                    "title": f"Optimize Top Category: {top_cat}",
+                    "description": f"Your highest expense category this month is '{top_cat}' with ${top_val:.2f} spent. {tips.get(top_cat, 'Review recent entries to locate potential savings.')}",
+                    "impact": "Medium",
+                }
+            )
+
+    return render_template(
+        "suggestions.html",
+        user=user,
+        suggestions=suggestions_list,
+        total_current=total_current,
+    )
+
+
 if __name__ == "__main__":
     import os
 
