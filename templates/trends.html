@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Spending Trends - Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/trends.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="trends-container">
+    <div class="trends-header">
+        <h1 class="page-title">Spending Trends</h1>
+        <p class="page-subtitle">Compare your monthly spending habits and track changes over time.</p>
+    </div>
+
+    <!-- Month Selector Card -->
+    <div class="card selector-card">
+        <form method="GET" action="{{ url_for('trends') }}" class="selector-form">
+            <div class="selector-group">
+                <label for="month_a">Base Month (A)</label>
+                <select name="month_a" id="month_a" class="form-control select-control">
+                    {% if not logged_months %}
+                    <option value="{{ month_a }}">{{ month_a }}</option>
+                    {% endif %}
+                    {% for m in logged_months %}
+                    <option value="{{ m }}" {% if m == month_a %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="selector-divider">
+                <span class="material-symbols-outlined">compare_arrows</span>
+            </div>
+
+            <div class="selector-group">
+                <label for="month_b">Comparison Month (B)</label>
+                <select name="month_b" id="month_b" class="form-control select-control">
+                    {% if not logged_months %}
+                    <option value="{{ month_b }}">{{ month_b }}</option>
+                    {% endif %}
+                    {% for m in logged_months %}
+                    <option value="{{ m }}" {% if m == month_b %}selected{% endif %}>{{ m }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-compare">Compare</button>
+        </form>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-title">Spent in {{ month_a }}</div>
+            <div class="metric-value">${{ "%.2f"|format(total_a) }}</div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-title">Spent in {{ month_b }}</div>
+            <div class="metric-value">${{ "%.2f"|format(total_b) }}</div>
+        </div>
+
+        <div class="metric-card {% if total_diff > 0 %}trend-up{% elif total_diff < 0 %}trend-down{% endif %}">
+            <div class="metric-title">Overall Difference</div>
+            <div class="metric-value">
+                {% if total_diff > 0 %}+{% endif %}${{ "%.2f"|format(total_diff) }}
+            </div>
+            <div class="metric-trend-percentage">
+                {% if total_diff > 0 %}
+                <span class="trend-icon">▲</span> Increased by {{ "%.1f"|format(total_pct_change) }}%
+                {% elif total_diff < 0 %}
+                <span class="trend-icon">▼</span> Decreased by {{ "%.1f"|format(total_pct_change|abs) }}%
+                {% else %}
+                No change
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown table -->
+    <div class="card table-card">
+        <h2 class="section-title">Category Comparison Breakdown</h2>
+        
+        {% if not comparison_data %}
+        <div class="empty-state">
+            <span class="material-symbols-outlined">data_usage</span>
+            <p>No expense data found for either of the selected months.</p>
+        </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="trends-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th class="text-right">Spent in {{ month_a }}</th>
+                        <th class="text-right">Spent in {{ month_b }}</th>
+                        <th class="text-right">Difference</th>
+                        <th class="text-right">Change (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in comparison_data %}
+                    <tr>
+                        <td class="category-name">
+                            <span class="category-indicator category-{{ item.category.lower() }}"></span>
+                            {{ item.category }}
+                        </td>
+                        <td class="text-right">${{ "%.2f"|format(item.amount_a) }}</td>
+                        <td class="text-right">${{ "%.2f"|format(item.amount_b) }}</td>
+                        <td class="text-right {% if item.diff > 0 %}diff-up{% elif item.diff < 0 %}diff-down{% endif %}">
+                            {% if item.diff > 0 %}+{% endif %}${{ "%.2f"|format(item.diff) }}
+                        </td>
+                        <td class="text-right">
+                            {% if item.amount_a == 0.0 and item.amount_b > 0.0 %}
+                            <span class="badge badge-up">New Category</span>
+                            {% elif item.diff > 0 %}
+                            <span class="badge badge-up">+{{ "%.1f"|format(item.pct_change) }}%</span>
+                            {% elif item.diff < 0 %}
+                            <span class="badge badge-down">{{ "%.1f"|format(item.pct_change) }}%</span>
+                            {% else %}
+                            <span class="badge badge-neutral">0.0%</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

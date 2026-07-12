@@ -1,0 +1,254 @@
+/* Trends stylesheet */
+
+:root {
+    --card-bg: #ffffff;
+    --card-border: #e5e7eb;
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #9ca3af;
+    --color-green: #2d6a4f;
+    --color-green-light: #d1fae5;
+    --color-green-dark: #065f46;
+    --color-red: #ef4444;
+    --color-red-light: #fee2e2;
+    --color-red-dark: #991b1b;
+}
+
+.trends-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+.trends-header {
+    margin-bottom: 2rem;
+}
+
+.page-title {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+/* Selector Card */
+.selector-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.selector-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.selector-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.selector-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.selector-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    padding-bottom: 0.75rem;
+}
+
+.selector-divider span {
+    font-size: 1.75rem;
+}
+
+.form-control {
+    padding: 0.75rem;
+    border: 1px solid var(--card-border);
+    border-radius: 6px;
+    font-size: 1rem;
+    color: var(--text-primary);
+    outline: none;
+    background: #fff;
+    cursor: pointer;
+}
+
+.btn-compare {
+    padding: 0.75rem 2rem;
+    height: 46px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.metric-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.metric-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.metric-trend-percentage {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.trend-up {
+    border-left: 4px solid var(--color-red);
+}
+
+.trend-up .metric-trend-percentage {
+    color: var(--color-red-dark);
+}
+
+.trend-down {
+    border-left: 4px solid var(--color-green);
+}
+
+.trend-down .metric-trend-percentage {
+    color: var(--color-green-dark);
+}
+
+/* Table Card */
+.table-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.trends-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.trends-table th {
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--card-border);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+.trends-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--card-border);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.category-name {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+}
+
+.category-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Category indicator colors mapping */
+.category-food { background-color: #ef4444; }
+.category-transport { background-color: #f59e0b; }
+.category-bills { background-color: #10b981; }
+.category-health { background-color: #0ea5e9; }
+.category-entertainment { background-color: #8b5cf6; }
+.category-shopping { background-color: #ec4899; }
+.category-other { background-color: #6b7280; }
+
+.diff-up {
+    color: var(--color-red-dark);
+    font-weight: 600;
+}
+
+.diff-down {
+    color: var(--color-green-dark);
+    font-weight: 600;
+}
+
+/* Badges */
+.badge {
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-up {
+    background-color: var(--color-red-light);
+    color: var(--color-red-dark);
+}
+
+.badge-down {
+    background-color: var(--color-green-light);
+    color: var(--color-green-dark);
+}
+
+.badge-neutral {
+    background-color: #f3f4f6;
+    color: #475569;
+}
