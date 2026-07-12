@@ -576,3 +576,94 @@ def delete_user_account(user_id, path=None):
         raise e
     finally:
         conn.close()
+
+
+# ------------------------------------------------------------------ #
+# Recurring Rules queries                                            #
+# ------------------------------------------------------------------ #
+
+
+def get_recurring_rules(user_id, path=None):
+    """
+    Retrieve all active recurring rules for a user.
+    """
+    conn = get_db(path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, user_id, amount, category, description, frequency, start_date, last_generated, created_at
+            FROM recurring_rules
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            """,
+            (user_id,),
+        ).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
+
+
+def get_recurring_rule(rule_id, path=None):
+    """
+    Retrieve a single recurring rule by ID.
+    """
+    conn = get_db(path)
+    try:
+        row = conn.execute(
+            """
+            SELECT id, user_id, amount, category, description, frequency, start_date, last_generated, created_at
+            FROM recurring_rules
+            WHERE id = ?
+            """,
+            (rule_id,),
+        ).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
+
+
+def create_recurring_rule(
+    user_id, amount, category, frequency, start_date, description=None, path=None
+):
+    """
+    Insert a new recurring expense rule.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            """
+            INSERT INTO recurring_rules (user_id, amount, category, frequency, start_date, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (user_id, round(amount, 2), category, frequency, start_date, description),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def delete_recurring_rule(rule_id, path=None):
+    """
+    Delete a recurring rule by ID.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute("DELETE FROM recurring_rules WHERE id = ?", (rule_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def update_recurring_rule_last_generated(rule_id, last_generated, path=None):
+    """
+    Update the last_generated date for a recurring rule.
+    """
+    conn = get_db(path)
+    try:
+        conn.execute(
+            "UPDATE recurring_rules SET last_generated = ? WHERE id = ?",
+            (last_generated, rule_id),
+        )
+        conn.commit()
+    finally:
+        conn.close()

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Recurring Rule - Spendly{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recurring.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="recurring-form-container">
+    <div class="form-header">
+        <a href="{{ url_for('recurring') }}" class="btn-back">
+            <span class="material-symbols-outlined">arrow_back</span> Back to Recurring
+        </a>
+        <h1 class="page-title">Add Recurring Expense</h1>
+        <p class="page-subtitle">Set up a new recurring transaction rule.</p>
+    </div>
+
+    <div class="card form-card">
+        <form action="{{ url_for('add_recurring') }}" method="POST" class="recurring-form">
+            <div class="form-group">
+                <label for="amount">Amount ($) <span class="required">*</span></label>
+                <input type="number" step="0.01" min="0.01" id="amount" name="amount" required placeholder="0.00" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category <span class="required">*</span></label>
+                <select id="category" name="category" required class="form-control select-control">
+                    <option value="" disabled selected>Select category</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="frequency">Frequency <span class="required">*</span></label>
+                <select id="frequency" name="frequency" required class="form-control select-control">
+                    <option value="" disabled selected>Select frequency</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="start_date">Start Date <span class="required">*</span></label>
+                <input type="date" id="start_date" name="start_date" required class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description" placeholder="e.g. Netflix, Rent, Electricity (max 250 chars)" maxlength="250" class="form-control">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-submit">Create Recurring Rule</button>
+                <a href="{{ url_for('recurring') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Default start date to today's date in local time YYYY-MM-DD
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').value = today;
+    });
+</script>
+{% endblock %}

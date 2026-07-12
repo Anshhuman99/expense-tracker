@@ -45,6 +45,11 @@ from database.queries import (
     update_user_password,
     get_user_full_by_id,
     delete_user_account,
+    get_recurring_rules,
+    get_recurring_rule,
+    create_recurring_rule,
+    delete_recurring_rule,
+    update_recurring_rule_last_generated,
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -686,6 +691,96 @@ def logout():
     return redirect(url_for("landing"))
 
 
+def process_due_recurring_expenses(user_id):
+    """
+    Check active recurring rules and generate standard expenses if they are due.
+    """
+    rules = get_recurring_rules(user_id)
+    if not rules:
+        return
+
+    today = datetime.date.today()
+    for rule in rules:
+        start_date = datetime.datetime.strptime(rule["start_date"], "%Y-%m-%d").date()
+        if start_date > today:
+            continue
+
+        # Start generating from either the day after last_generated or start_date
+        if rule["last_generated"]:
+            last_gen = datetime.datetime.strptime(
+                rule["last_generated"], "%Y-%m-%d"
+            ).date()
+            if rule["frequency"] == "daily":
+                temp_date = last_gen + datetime.timedelta(days=1)
+            elif rule["frequency"] == "weekly":
+                temp_date = last_gen + datetime.timedelta(weeks=1)
+            elif rule["frequency"] == "monthly":
+                year = last_gen.year
+                month = last_gen.month + 1
+                if month > 12:
+                    month = 1
+                    year += 1
+                try:
+                    temp_date = last_gen.replace(year=year, month=month)
+                except ValueError:
+                    last_day = calendar.monthrange(year, month)[1]
+                    temp_date = last_gen.replace(year=year, month=month, day=last_day)
+            elif rule["frequency"] == "yearly":
+                year = last_gen.year + 1
+                try:
+                    temp_date = last_gen.replace(year=year)
+                except ValueError:
+                    temp_date = last_gen.replace(year=year, day=28)
+            else:
+                continue
+        else:
+            temp_date = start_date
+
+        generated_count = 0
+        new_last_generated = rule["last_generated"]
+
+        while temp_date <= today:
+            # Generate expense
+            create_expense(
+                user_id=user_id,
+                amount=rule["amount"],
+                category=rule["category"],
+                date=temp_date.strftime("%Y-%m-%d"),
+                description=rule["description"]
+                or f"Recurring {rule['frequency']} expense",
+            )
+            generated_count += 1
+            new_last_generated = temp_date.strftime("%Y-%m-%d")
+
+            # Advance to the next occurrence date
+            if rule["frequency"] == "daily":
+                temp_date = temp_date + datetime.timedelta(days=1)
+            elif rule["frequency"] == "weekly":
+                temp_date = temp_date + datetime.timedelta(weeks=1)
+            elif rule["frequency"] == "monthly":
+                year = temp_date.year
+                month = temp_date.month + 1
+                if month > 12:
+                    month = 1
+                    year += 1
+                try:
+                    temp_date = temp_date.replace(year=year, month=month)
+                except ValueError:
+                    last_day = calendar.monthrange(year, month)[1]
+                    temp_date = temp_date.replace(year=year, month=month, day=last_day)
+            elif rule["frequency"] == "yearly":
+                year = temp_date.year + 1
+                try:
+                    temp_date = temp_date.replace(year=year)
+                except ValueError:
+                    temp_date = temp_date.replace(year=year, day=28)
+            else:
+                break
+
+        if generated_count > 0 and new_last_generated:
+            update_recurring_rule_last_generated(rule["id"], new_last_generated)
+
+
 @app.route("/profile")
 def profile():
     user_id = session.get("user_id")
@@ -698,6 +793,13 @@ def profile():
         session.clear()
         flash("User session invalid. Please log in again.", "error")
         return redirect(url_for("login"))
+
+    # Process due recurring expenses automatically
+    try:
+        process_due_recurring_expenses(user_id)
+    except Exception as e:
+        # Prevent page load failure due to background generation issues, but log/flash it
+        flash(f"Error generating recurring expenses: {str(e)}", "warning")
 
     # Get active filters from URL query parameters
     active_filters = _get_filter_params()
@@ -1841,6 +1943,111 @@ def delete_account():
             return redirect(url_for("settings"))
 
     return render_template("delete_account.html", user=user)
+
+
+# ------------------------------------------------------------------ #
+# Recurring Expenses routes (Step 26)                                #
+# ------------------------------------------------------------------ #
+
+
+@app.route("/recurring")
+def recurring():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    rules = get_recurring_rules(user_id)
+    return render_template("recurring.html", rules=rules, user=user)
+
+
+@app.route("/recurring/add", methods=["GET", "POST"])
+def add_recurring():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.clear()
+        flash("User session invalid. Please log in again.", "error")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        amount_str = request.form.get("amount", "").strip()
+        category = request.form.get("category", "").strip()
+        frequency = request.form.get("frequency", "").strip()
+        start_date = request.form.get("start_date", "").strip()
+        description = request.form.get("description", "").strip()[:250]
+
+        if not amount_str:
+            flash("Amount is required.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        try:
+            amount = float(amount_str)
+            if amount <= 0:
+                flash("Amount must be positive.", "error")
+                return render_template(
+                    "add_recurring.html", categories=ALLOWED_CATEGORIES
+                )
+        except ValueError:
+            flash("Amount must be a number.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        if category not in ALLOWED_CATEGORIES:
+            flash("Invalid category selected.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        if frequency not in ["daily", "weekly", "monthly", "yearly"]:
+            flash("Invalid frequency selected.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        if not start_date:
+            flash("Start date is required.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        try:
+            datetime.datetime.strptime(start_date, "%Y-%m-%d")
+        except ValueError:
+            flash("Start date must be in YYYY-MM-DD format.", "error")
+            return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+        create_recurring_rule(
+            user_id=user_id,
+            amount=amount,
+            category=category,
+            frequency=frequency,
+            start_date=start_date,
+            description=description,
+        )
+        flash("Recurring expense rule created successfully.", "success")
+        return redirect(url_for("recurring"))
+
+    return render_template("add_recurring.html", categories=ALLOWED_CATEGORIES)
+
+
+@app.route("/recurring/<int:rule_id>/delete", methods=["POST"])
+def delete_recurring(rule_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in to access this page.", "error")
+        return redirect(url_for("login"))
+
+    rule = get_recurring_rule(rule_id)
+    if not rule or rule["user_id"] != user_id:
+        abort(403)
+
+    delete_recurring_rule(rule_id)
+    flash("Recurring expense rule deleted successfully.", "success")
+    return redirect(url_for("recurring"))
 
 
 if __name__ == "__main__":
